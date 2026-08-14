@@ -1,7 +1,9 @@
 import express from 'express';
+import { PrismaClient } from '@prisma/client';
 
 const app = express();
 const port = process.env.PORT || 3000;
+const prisma = new PrismaClient();
 
 app.use(express.json());
 
@@ -11,6 +13,15 @@ app.get('/', (req, res) => {
 
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', service: 'TokTickIT API' });
+});
+
+app.get('/api/categories', async (req, res) => {
+  try {
+    const categories = await prisma.category.findMany();
+    res.status(200).json(categories);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 export const server = app.listen(port, () => {

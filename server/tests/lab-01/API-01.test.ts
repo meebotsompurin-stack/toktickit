@@ -12,7 +12,7 @@ describe('GET /api/health', () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
       status: 'ok',
-      service: 'Tok TickIT API',
+      service: 'TokTickIT API',
     });
   });
 });
