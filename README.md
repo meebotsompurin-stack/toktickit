@@ -1,7 +1,0 @@
-# TokTickIT
-
-## Lab 1 Foundation Setup
-
-- React + Vite + TS in `client/`
-- Express + Node + TS in `server/`
-- Prisma for PostgreSQL in `server/prisma/`

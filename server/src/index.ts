@@ -9,6 +9,10 @@ app.get('/', (req, res) => {
   res.send('TokTickIT API is running');
 });
 
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok', service: 'TokTickIT API' });
+});
+
 export const server = app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
