@@ -1,11 +1,8 @@
 import request from 'supertest';
-import { describe, it, expect, afterAll } from 'vitest';
-import app, { server } from '../../src/index';
+import { describe, it, expect } from 'vitest';
+import app from '../../src/index';
 
 describe('GET /api/categories', () => {
-  afterAll(() => {
-    server.close();
-  });
 
   it('should return 200 and an array of categories', async () => {
     const response = await request(app).get('/api/categories');
