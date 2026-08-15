@@ -5,7 +5,7 @@ import App from './App';
 
 describe('App Category List UI', () => {
   beforeEach(() => {
-    global.fetch = vi.fn();
+    globalThis.fetch = vi.fn() as any;
   });
 
   afterEach(() => {
@@ -20,7 +20,7 @@ describe('App Category List UI', () => {
       { id: 4, name: 'Network' },
     ];
 
-    (global.fetch as any).mockResolvedValue({
+    (globalThis.fetch as any).mockResolvedValue({
       ok: true,
       json: async () => mockCategories,
     });

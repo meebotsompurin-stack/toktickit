@@ -19,5 +19,8 @@ describe('GET /api/categories', () => {
 
     // 3. Check the specific order of the categories
     expect(response.body[0].name).toBe('Account and Access');
+    expect(response.body[1].name).toBe('Hardware');
+    expect(response.body[2].name).toBe('Software');
+    expect(response.body[3].name).toBe('Network');
   });
 });
