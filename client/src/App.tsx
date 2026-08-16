@@ -7,28 +7,34 @@ interface Category {
 }
 
 function App() {
-  const [loading, setLoading] = useState(false);
+  const [healthLoading, setHealthLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+
   const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/categories');
+        if (!response.ok) {
+          throw new Error('Failed to fetch categories');
+        }
+        const data = await response.json();
+        setCategories(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchCategories();
   }, []);
 
-  const fetchCategories = async () => {
-    try {
-      const response = await fetch('/api/categories');
-      if (response.ok) {
-        const data = await response.json();
-        setCategories(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch categories:', error);
-    }
-  };
-
   const handleCheckSystem = async () => {
-    setLoading(true);
+    setHealthLoading(true);
     setStatus('Loading...');
     try {
       const response = await fetch('/api/health');
@@ -37,10 +43,10 @@ function App() {
       } else {
         setStatus('System Status: Offline. Unable to connect to TokTickIT API');
       }
-    } catch (error) {
+    } catch (err) {
       setStatus('System Status: Offline. Unable to connect to TokTickIT API');
     } finally {
-      setLoading(false);
+      setHealthLoading(false);
     }
   };
 
@@ -52,9 +58,9 @@ function App() {
         <button 
           className="btn btn-primary" 
           onClick={handleCheckSystem}
-          disabled={loading}
+          disabled={healthLoading}
         >
-          {loading ? 'Checking...' : 'Check System'}
+          {healthLoading ? 'Checking...' : 'Check System'}
         </button>
       </div>
 
@@ -64,9 +70,13 @@ function App() {
         </div>
       )}
 
-      {categories.length > 0 && (
-        <div className="mt-4">
-          <h4>Supported Request Categories</h4>
+      <div className="mt-4">
+        <h4>Supported Request Categories</h4>
+        {loading ? (
+          <p className="text-primary">Loading categories...</p>
+        ) : error ? (
+          <p className="text-danger">{error}</p>
+        ) : categories.length > 0 ? (
           <ul className="list-group">
             {categories.map((category) => (
               <li key={category.id} className="list-group-item">
@@ -74,8 +84,10 @@ function App() {
               </li>
             ))}
           </ul>
-        </div>
-      )}
+        ) : (
+          <p className="text-muted">No categories found.</p>
+        )}
+      </div>
     </div>
   );
 }
