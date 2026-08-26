@@ -1,5 +1,8 @@
 # Lab 2 API Contract
 
+## Global Headers
+*   **Authentication:** ทุก API Request ต้องส่ง HTTP Header ชื่อ `X-Requester-Id` เสมอ เพื่อระบุตัวตนและป้องกันการสวมรอย (Spoofing)
+
 ## 1. Base API URL
 `/api`
 
@@ -22,14 +25,21 @@
 ### 2.4 Create a Ticket
 *   **Method:** `POST`
 *   **Path:** `/tickets`
-*   **Request Body:** `requesterId`, `categoryId`, `relatedSystemId`, `requestedPriority`, `summary`, `description`, `attachmentIds`
+*   **Request Body:** `categoryId`, `relatedSystemId`, `requestedPriority`, `summary`, `description`, `attachmentIds`
 *   **Response (201 Created):** คืนค่าข้อมูล Ticket ที่ถูกสร้างสำเร็จ พร้อม `ticketNumber` ที่ระบบเจนให้
 *   **Response (400 Bad Request):** คืนค่าเมื่อข้อมูลไม่ครบหรือไม่ผ่าน Validation
 
 ### 2.5 Get My Tickets (List)
 *   **Method:** `GET`
 *   **Path:** `/tickets`
-*   **Query Params:** `requesterId` (บังคับ), `search`, `categoryId`, `priority`, `status`, `page`, `limit`
+*   **Query Params:** `search`, `categoryId`, `priority`, `status`, `page`, `limit`
 *   **Response (200 OK):** คืนค่ารายการ Ticket แบบมี Pagination
 
-<!-- อัปเดตเอกสาร -->
+## 3. Standard Error Response (400 Bad Request)
+```json
+{
+  "error": "Validation Failed",
+  "details": [
+    { "field": "summary", "message": "Summary must not exceed 100 characters" }
+  ]
+}

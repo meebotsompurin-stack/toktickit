@@ -11,7 +11,11 @@
 | UI-01 | BR-04 | อัปโหลดไฟล์แนบที่ไม่ใช่รูปภาพหรือ PDF | แจ้งเตือน Error ใต้ปุ่มอัปโหลด และอัปโหลดไม่สำเร็จ | `client/.../CreateTicket.test.tsx` | Pending |
 | UI-02 | FR-04 | กด Submit โดยเว้นว่างช่อง Summary และ Description | แสดงข้อความ Error สีแดงใต้ฟิลด์ และฟอร์มไม่ถูกส่ง | `client/.../CreateTicket.test.tsx` | Pending |
 | E2E-01 | FR-02 | ค้นหาและเรียงลำดับ Ticket ในหน้า My Tickets | แสดงเฉพาะ Ticket ที่ตรงกับคำค้นหา และเรียงตามความเร่งด่วน | `e2e/lab-02/requester-ticket-flow.spec.ts` | Pending |
+| API-05 | ตรวจสอบไฟล์ | อัปโหลดไฟล์แนบขนาดเกิน 5MB | 400 Bad Request; อัปโหลดไม่สำเร็จ | `attachments.api.test.ts` | Pending |
+| API-06 | ตรวจสอบไฟล์ | อัปโหลดไฟล์ผิดประเภท (เช่น .exe) ตรวจจาก MIME Type | 400 Bad Request; อัปโหลดไม่สำเร็จ | `attachments.api.test.ts` | Pending |
+| API-07 | ตรวจสอบไฟล์ | อัปโหลดไฟล์แนบพร้อมกันเกิน 5 ไฟล์ | 400 Bad Request; อัปโหลดไม่สำเร็จ | `attachments.api.test.ts` | Pending |
+| API-08 | ความปลอดภัย | เรียก API โดยไม่ส่ง Header X-Requester-Id | 401 Unauthorized | `tickets.api.test.ts` | Pending |
+| UI-03 | Accessibility | ใช้คีย์บอร์ด (Tab) นำทาง และเช็คการแปลง Table เป็น Card บนมือถือ | ทำงานได้สมบูรณ์และแสดงผลถูกต้อง | `responsive.spec.ts` | Pending |
 
 ## 3. Known Limitations
 - เนื่องจาก Lab 2 ยังไม่มีระบบ Authentication จริง การทดสอบจึงทำผ่าน Development Requester Context เท่านั้น
-<!-- อัปเดตเอกสาร -->

@@ -12,13 +12,18 @@ IT Department ต้องการระบบให้พนักงานแ
 
 ## 4. Functional Requirements (FR)
 *   FR-01: ผู้ใช้สามารถสร้าง Ticket ใหม่โดยระบุ Category, Related System, Priority, Summary, Description และ Attachments ได้
-*   FR-02: ระบบต้องรองรับการค้นหาและฟิลเตอร์ Ticket ในหน้า My Tickets 
-*   FR-03: ผู้ใช้สามารถดูรายละเอียด Ticket ของตัวเองและดาวน์โหลด/ลบไฟล์แนบที่อนุญาตได้ 
-*   FR-04:เมื่อเกิดข้อผิดพลาดในการกรอกข้อมูลฟอร์ม จะต้องแสดงข้อความ Error ใต้ช่อง input นั้นๆ ทันที
+*   FR-02: ระบบต้องรองรับการค้นหาและฟิลเตอร์ Ticket ในหน้า My Tickets
+*   FR-03: ผู้ใช้สามารถดูรายละเอียด Ticket ของตัวเองและดาวน์โหลด/ลบไฟล์แนบที่อนุญาตได้
+*   FR-04: เมื่อเกิดข้อผิดพลาดในการกรอกข้อมูลฟอร์ม จะต้องแสดงข้อความ Error ใต้ช่อง input นั้นๆ ทันที
 
 ## 5. Business Rules (BR)
-*   BR-01: Backend เป็นผู้สร้าง Ticket Number อย่างเป็นทางการและต้องไม่ซ้ำกัน 
+*   BR-01: Backend เป็นผู้สร้าง Ticket Number อย่างเป็นทางการและต้องไม่ซ้ำกัน
 *   BR-02: Ticket ใหม่ต้องเริ่มต้นด้วยสถานะ "New" เสมอ
-*   BR-03: หน้า Development Requester ใช้สำหรับจำลองการทดสอบเท่านั้น ไม่ใช่ระบบ Authentication 
+*   BR-03: หน้า Development Requester ใช้สำหรับจำลองการทดสอบเท่านั้น ไม่ใช่ระบบ Authentication
 *   BR-04: ไฟล์แนบต้องเป็นประเภท JPG, PNG, WEBP, PDF ขนาดไม่เกิน 5MB และแนบได้สูงสุด 5 ไฟล์ต่อ 1 Ticket
 *   BR-05: ไฟล์ที่ถูกลบแบบ Soft-removal จะยังคงแสดงชื่อในระบบประวัติ แต่ไม่สามารถดาวน์โหลดหรือดูตัวอย่างได้
+*   BR-06: **Required Fields & Constraints:** ฟิลด์ Category, Requested Priority, และ Related System เป็นข้อมูลบังคับกรอก (Required) โดย Summary จำกัดความยาวสูงสุด 100 ตัวอักษร และ Description จำกัดสูงสุด 1,000 ตัวอักษร
+*   BR-07: **Enum Values:** ค่า Requested Priority ที่อนุญาตคือ Low, Medium, High
+*   BR-08: **Ticket Statuses:** ค่า Current Status ที่ระบบรองรับคือ New, Open, In Progress, Resolved, Closed *(หมายเหตุ: สำหรับการพัฒนาใน Lab 2 จะจำกัดการทำงานและแสดงผลเฉพาะสถานะ "New" เท่านั้น ตามขอบเขตของแล็บ ส่วนสถานะอื่นเตรียมไว้สำหรับระบบ IT Staff ในอนาคต)*
+*   BR-09: **Attachment Security:** ฝั่ง Backend ต้องตรวจสอบประเภทไฟล์ที่อนุญาตจาก MIME Type เท่านั้น ห้ามพึ่งพาการตรวจสอบจากนามสกุลไฟล์เพียงอย่างเดียว
+*   BR-10: **Soft-removal Policy:** การลบไฟล์แนบจะเป็นแบบ Soft-removal (ไม่ลบไฟล์จริงออกจากฐานข้อมูล) แต่ระบบจะบันทึกข้อมูล `deletedBy` (ผู้ลบ) และ `deletedAt` (เวลาที่ลบ)
