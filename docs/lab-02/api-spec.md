@@ -32,10 +32,12 @@
 ### 2.5 Get My Tickets (List)
 *   **Method:** `GET`
 *   **Path:** `/tickets`
-*   **Query Params:** `search`, `categoryId`, `priority`, `status`, `page`, `limit`
+*   **Query Params:** `search`, `categoryId`, `priority`, `status`, `page` (default: 1), `limit` (default: 10, max: 50)
 *   **Response (200 OK):** คืนค่ารายการ Ticket แบบมี Pagination
 
-## 3. Standard Error Response (400 Bad Request)
+## 3. Standard Error Responses
+
+### 400 Bad Request (Validation Error)
 ```json
 {
   "error": "Validation Failed",
