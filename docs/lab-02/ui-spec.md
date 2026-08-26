@@ -19,3 +19,5 @@
 *   **Desktop (≥ 992 px):** Layout แบบ Multi-column จัดกึ่งกลางจอและจำกัดความกว้างสูงสุด (Max-width)
 *   **Tablet (768 - 991 px):** Layout แบบ 2 คอลัมน์ (Two-column) ในส่วนที่ทำได้ ช่อง Summary และ Description ต้องกว้างพอ
 *   **Mobile (< 768 px):** ข้อมูลเรียงซ้อนกันแนวตั้ง (Stack vertically) ปุ่มกดต้องใหญ่พอสำหรับแตะ (Touch-friendly) และห้ามมี Scroll แนวนอนเด็ดขาด
+
+<!-- อัปเดตเอกสาร -->

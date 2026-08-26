@@ -14,3 +14,4 @@
 
 ## 3. Known Limitations
 - เนื่องจาก Lab 2 ยังไม่มีระบบ Authentication จริง การทดสอบจึงทำผ่าน Development Requester Context เท่านั้น
+<!-- อัปเดตเอกสาร -->

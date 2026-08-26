@@ -31,3 +31,5 @@
 *   **Path:** `/tickets`
 *   **Query Params:** `requesterId` (บังคับ), `search`, `categoryId`, `priority`, `status`, `page`, `limit`
 *   **Response (200 OK):** คืนค่ารายการ Ticket แบบมี Pagination
+
+<!-- อัปเดตเอกสาร -->
