@@ -45,3 +45,28 @@
     { "field": "summary", "message": "Summary must not exceed 100 characters" }
   ]
 }
+
+
+### 401 Unauthorized
+```json
+{
+  "error": "Unauthorized",
+  "message": "X-Requester-Id header is required"
+}
+```
+
+### 403 Forbidden
+```json
+{
+  "error": "Forbidden",
+  "message": "You do not have permission to access this ticket"
+}
+```
+
+### 404 Not Found
+```json
+{
+  "error": "Not Found",
+  "message": "Ticket not found"
+}
+```
