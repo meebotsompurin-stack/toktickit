@@ -45,7 +45,7 @@
     { "field": "summary", "message": "Summary must not exceed 100 characters" }
   ]
 }
-
+```
 
 ### 401 Unauthorized
 ```json
@@ -68,5 +68,17 @@
 {
   "error": "Not Found",
   "message": "Ticket not found"
+}
+```
+
+## 4. Pagination Rules (สำหรับ GET /tickets)
+*   **Default Params:** `page=1`, `limit=10`
+*   **Response Metadata:** ต้องส่งกลับมาพร้อม Object:
+```json
+{
+  "currentPage": 1,
+  "itemsPerPage": 10,
+  "totalItems": 42,
+  "totalPages": 5
 }
 ```
