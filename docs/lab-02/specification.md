@@ -8,7 +8,7 @@ IT Department ต้องการระบบให้พนักงานแ
 
 ## 3. Scope
 *   **Included:** หน้า Create Ticket, My Tickets, Requester Ticket Detail, ระบบแนบไฟล์/ลบไฟล์แบบ Soft-remove, ระบบค้นหา/ฟิลเตอร์/แบ่งหน้า (Pagination), และการตรวจสอบสิทธิ์ความเป็นเจ้าของ Ticket
-*   **Excluded:** ระบบ Authentication/Login จริง, IT Staff workflow (การจัดการคิวรับงาน), คอมเมนต์, Internal Notes, Actions Taken, และการเปลี่ยนสถานะ Ticket อื่นๆ
+*   **Excluded:** ระบบ Authentication/Login จริง, IT Staff workflow (การจัดการคิวรับงาน), คอมเมนต์, Internal Notes, Actions Taken, ระบบจัดการแอดมิน (Admin management) และการเปลี่ยนสถานะ Ticket อื่นๆ
 
 ## 4. Functional Requirements (FR)
 *   FR-01: ผู้ใช้สามารถสร้าง Ticket ใหม่โดยระบุ Category, Related System, Priority, Summary, Description และ Attachments ได้
@@ -20,10 +20,7 @@ IT Department ต้องการระบบให้พนักงานแ
 *   BR-01: Backend เป็นผู้สร้าง Ticket Number อย่างเป็นทางการและต้องไม่ซ้ำกัน
 *   BR-02: Ticket ใหม่ต้องเริ่มต้นด้วยสถานะ "New" เสมอ
 *   BR-03: หน้า Development Requester ใช้สำหรับจำลองการทดสอบเท่านั้น ไม่ใช่ระบบ Authentication
-*   BR-04: ไฟล์แนบต้องเป็นประเภท JPG, PNG, WEBP, PDF ขนาดไม่เกิน 5MB และแนบได้สูงสุด 5 ไฟล์ต่อ 1 Ticket
-*   BR-05: ไฟล์ที่ถูกลบแบบ Soft-removal จะยังคงแสดงชื่อในระบบประวัติ แต่ไม่สามารถดาวน์โหลดหรือดูตัวอย่างได้
-*   BR-06: **Required Fields & Constraints:** ฟิลด์ Category, Requested Priority, และ Related System เป็นข้อมูลบังคับกรอก (Required) โดย Summary จำกัดความยาวสูงสุด 100 ตัวอักษร และ Description จำกัดสูงสุด 1,000 ตัวอักษร
-*   BR-07: **Enum Values:** ค่า Requested Priority ที่อนุญาตคือ Low, Medium, High
-*   BR-08: **Ticket Statuses:** ค่า Current Status ที่ระบบรองรับคือ New, Open, In Progress, Resolved, Closed *(หมายเหตุ: สำหรับการพัฒนาใน Lab 2 จะจำกัดการทำงานและแสดงผลเฉพาะสถานะ "New" เท่านั้น ตามขอบเขตของแล็บ ส่วนสถานะอื่นเตรียมไว้สำหรับระบบ IT Staff ในอนาคต)*
-*   BR-09: **Attachment Security:** ฝั่ง Backend ต้องตรวจสอบประเภทไฟล์ที่อนุญาตจาก MIME Type เท่านั้น ห้ามพึ่งพาการตรวจสอบจากนามสกุลไฟล์เพียงอย่างเดียว
-*   BR-10: **Soft-removal Policy:** การลบไฟล์แนบจะเป็นแบบ Soft-removal (ไม่ลบไฟล์จริงออกจากฐานข้อมูล) แต่ระบบจะบันทึกข้อมูล `deletedBy` (ผู้ลบ) และ `deletedAt` (เวลาที่ลบ)
+*   BR-04: **Required Fields & Constraints:** ฟิลด์ Category, Requested Priority, และ Related System เป็นข้อมูลบังคับกรอก (Required) โดย Summary จำกัดความยาวสูงสุด 100 ตัวอักษร และ Description จำกัดสูงสุด 1,000 ตัวอักษร
+*   BR-05: **Enum Values:** ค่า Requested Priority ที่อนุญาตคือ Low, Medium, High และ ค่า Status ที่ระบบรองรับคือ New, Open, In Progress, Resolved, Closed *(หมายเหตุ: สำหรับการพัฒนาใน Lab 2 จะจำกัดการทำงานและแสดงผลเฉพาะสถานะ "New" เท่านั้น ส่วนสถานะอื่นเตรียมไว้สำหรับระบบ IT Staff ในอนาคต)*
+*   BR-06: **Attachment Security:** ฝั่ง Backend ต้องตรวจสอบประเภทไฟล์ที่อนุญาตจากเนื้อหา "MIME Type" ของจริงเท่านั้น ห้ามพึ่งพาการตรวจสอบจากนามสกุลไฟล์ (File Extension) ที่ส่งมาจากหน้าบ้านเพียงอย่างเดียว
+*   BR-07: **Soft-removal Policy:** การลบไฟล์แนบจะเป็นแบบ Soft-removal (ไม่ลบไฟล์จริงออกจากฐานข้อมูล) โดยระบบจะต้องเก็บ Metadata ไว้ตรวจสอบย้อนหลัง (ใครเป็นคนลบ `deletedBy`, ลบเมื่อไหร่ `deletedAt`) และกำหนดให้มีเพียงบทบาท `Admin` เท่านั้นที่สามารถลบถาวร (Hard-delete) หรือกู้คืน (Restore) ได้

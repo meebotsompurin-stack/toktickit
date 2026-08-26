@@ -15,14 +15,14 @@
 *   **Required Field:** มีดอกจันสีแดง (*) กำกับที่ Label
 *   **Submit Button:** ต้องมีสถานะ Busy (หมุนๆ) และ Disable ไว้ระหว่างรอ API
 
-## 3. Accessibility Requirements
-*   **Focus States:** ปุ่มและ Input fields ต้องแสดง Focus ring ชัดเจนเมื่อใช้คีย์บอร์ด (Tab)
-*   **Contrast:** สีพื้นหลังและตัวอักษรต้องมีความแตกต่างกัน (WCAG AA compliance)
-*   **ARIA Labels:** ปุ่มที่เป็นไอคอน (Icon-only) ต้องใส่ `aria-label` บรรยายหน้าที่เสมอ
+## 3. Accessibility (a11y)
+*   **Contrast:** สีพื้นหลังและตัวอักษรต้องมีความต่างของสี (Contrast) ที่เหมาะสมเพื่อให้ผู้ใช้อ่านได้ง่าย (WCAG AA compliance)
+*   **Keyboard Navigation:** การนำทางด้วย Keyboard ต้องแสดงกรอบ Focus (Focus states) ที่ชัดเจนในทุกปุ่มและอินพุต เมื่อใช้ปุ่ม Tab
+*   **ARIA Labels:** ปุ่มที่เป็นไอคอน (Icon-only buttons) จะต้องมีการใส่ `aria-label` เสมอ
 
-## 4. Responsive Behavior
+## 4. Responsive & Content Management
 *   **Desktop (≥ 992 px):** Layout แบบ Multi-column
 *   **Tablet (768 - 991 px):** Layout แบบ 2 คอลัมน์ 
 *   **Mobile (< 768 px):** ข้อมูลเรียงซ้อนแนวตั้ง ห้ามมี Scroll แนวนอน
-*   **Long Filenames:** ตัดคำด้วย `text-overflow: ellipsis` (...) และแสดง Tooltip เมื่อชี้เมาส์
-*   **Mobile Table:** ตาราง Ticket List ในหน้า My Tickets ต้องแปลงเป็น Card layout บนหน้าจอมือถือเสมอ
+*   **Text Truncation:** หากชื่อไฟล์แนบมีความยาวเกินพื้นที่แสดงผล ให้ตัดคำด้วยเครื่องหมาย `...` (`text-overflow: ellipsis`) และแสดง Tooltip เมื่อชี้เมาส์
+*   **Mobile View (< 768 px):** การแสดงผลตารางรายการตั๋ว (Table) ในหน้า My Tickets จะต้องถูกแปลงเป็นรูปแบบการ์ด (Card) เสมอเมื่อเปิดบนหน้าจอมือถือ
