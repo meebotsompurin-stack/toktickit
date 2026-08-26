@@ -13,11 +13,10 @@
 | API-07 | File Upload | อัปโหลดไฟล์เกินโควต้า (เช่น อัปโหลด 6 ไฟล์พร้อมกัน) | 400 Bad Request | Pending |
 | API-08 | Security | ส่ง Request โดยไม่มีการแนบ Header `X-Requester-Id` หรือค่าไม่ถูกต้อง | 401 Unauthorized | Pending |
 | API-09 | Security | ตรวจสอบว่าระบบบันทึก Metadata (`deletedAt`, `deletedBy`) ครบถ้วนเมื่อทำการ Soft-remove | 200 OK และตรวจสอบพบ Metadata ใน Database (`deletedBy` ตรงกับ Header) | Pending |
-| API-10 | Security | จำลองสิทธิ์ Requester ธรรมดาพยายามลบไฟล์ถาวร (Hard-delete) หรือกู้คืน (Restore) | 403 Forbidden (สิทธิ์นี้สำหรับ Admin เท่านั้น) | Deferred (รอ Lab 3) |
+| API-10 | Security | จำลองสิทธิ์ Requester ธรรมดาพยายามลบไฟล์ถาวร (Hard-delete) หรือกู้คืน (Restore) | 403 Forbidden | Deferred to Lab 3 (Out of Scope: ระบบ Admin ไม่อยู่ในขอบเขตของ Lab 2) |
 | UI-01 | Validation | กด Submit โดยเว้นว่างช่อง Summary และ Description | แสดงข้อความ Error สีแดงใต้ฟิลด์ | Pending |
 | UI-03 | a11y | จำลองการใช้คีย์บอร์ดนำทาง (Tab) เพื่อตรวจสอบการแสดงผลของกรอบ Focus | กรอบ Focus แสดงผลชัดเจน | Pending |
 | UI-04 | Responsive | E2E Test ตรวจสอบการแสดงผลบนจอมือถือ | ตารางรายการตั๋ว (Table) ถูกแปลงเป็นการ์ด (Card) อย่างถูกต้อง | Pending |
 
 ## 3. Known Limitations
 - เนื่องจาก Lab 2 ยังไม่มีระบบ Authentication จริง การทดสอบจึงทำผ่าน Development Requester Context เท่านั้น
-- API-10 เรื่องสิทธิ์ Admin ถูกตั้งค่าเป็น Deferred ไว้เนื่องจากระบบ Admin Management ไม่ได้อยู่ในขอบเขตของ Lab 2

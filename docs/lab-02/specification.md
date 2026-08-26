@@ -21,6 +21,34 @@ IT Department ต้องการระบบให้พนักงานแ
 *   BR-02: Ticket ใหม่ต้องเริ่มต้นด้วยสถานะ "New" เสมอ
 *   BR-03: หน้า Development Requester ใช้สำหรับจำลองการทดสอบเท่านั้น ไม่ใช่ระบบ Authentication
 *   BR-04: **Required Fields & Constraints:** ฟิลด์ Category, Requested Priority, และ Related System เป็นข้อมูลบังคับกรอก (Required) โดย Summary จำกัดความยาวสูงสุด 100 ตัวอักษร และ Description จำกัดสูงสุด 1,000 ตัวอักษร
-*   BR-05: **Enum Values:** ค่า Requested Priority ที่อนุญาตคือ Low, Medium, High และ ค่า Status ที่ระบบรองรับคือ New, Open, In Progress, Resolved, Closed *(หมายเหตุ: สำหรับการพัฒนาใน Lab 2 จะจำกัดการทำงานและแสดงผลเฉพาะสถานะ "New" เท่านั้น ส่วนสถานะอื่นเตรียมไว้สำหรับระบบ IT Staff ในอนาคต)*
+*   BR-05: **Enum Values:** ค่า Requested Priority ที่อนุญาตคือ Low, Medium, High และ ค่า Status ที่ระบบรองรับคือ New, Open, In Progress, Resolved, Closed *(หมายเหตุ: สำหรับการพัฒนาใน Lab 2 จะจำกัดการทำงานและแสดงผลเฉพาะสถานะ "New" เท่านั้น)*
 *   BR-06: **Attachment Security:** ฝั่ง Backend ต้องตรวจสอบประเภทไฟล์ที่อนุญาตจากเนื้อหา "MIME Type" ของจริงเท่านั้น ห้ามพึ่งพาการตรวจสอบจากนามสกุลไฟล์ (File Extension) ที่ส่งมาจากหน้าบ้านเพียงอย่างเดียว
 *   BR-07: **Soft-removal Policy:** การลบไฟล์แนบจะเป็นแบบ Soft-removal (ไม่ลบไฟล์จริงออกจากฐานข้อมูล) โดยระบบจะต้องเก็บ Metadata ไว้ตรวจสอบย้อนหลัง (ใครเป็นคนลบ `deletedBy`, ลบเมื่อไหร่ `deletedAt`) และกำหนดให้มีเพียงบทบาท `Admin` เท่านั้นที่สามารถลบถาวร (Hard-delete) หรือกู้คืน (Restore) ได้
+
+## 6. Data Changes (Database Schema)
+โครงสร้างฐานข้อมูลที่เพิ่มขึ้นหรือเปลี่ยนแปลงใน Lab นี้:
+*   **Table: Ticket**
+    *   `id` (Primary Key, UUID)
+    *   `ticketNumber` (String, Unique)
+    *   `categoryId` (Foreign Key -> Category)
+    *   `relatedSystemId` (Foreign Key -> RelatedSystem)
+    *   `requestedPriority` (Enum: Low, Medium, High)
+    *   `status` (Enum: New, Open, In Progress, Resolved, Closed)
+    *   `summary` (String, Max 100)
+    *   `description` (String, Max 1000)
+    *   `requesterId` (String, Index)
+    *   `createdAt`, `updatedAt` (Timestamp)
+*   **Table: Attachment**
+    *   `id` (Primary Key, UUID)
+    *   `ticketId` (Foreign Key -> Ticket)
+    *   `filename` (String)
+    *   `mimetype` (String)
+    *   `size` (Integer)
+    *   `isRemoved` (Boolean, Default: false)
+    *   `deletedBy` (String, Nullable)
+    *   `deletedAt` (Timestamp, Nullable)
+
+## 7. Acceptance Criteria (AC)
+*   **AC-01:** ถ้าพิมพ์ Summary เกิน 100 ตัวอักษร ฟอร์มต้องไม่ถูกส่งและขึ้น Error สีแดงใต้ฟิลด์
+*   **AC-02:** ถ้าพยายามเข้าดูตั๋วของคนอื่น (สิทธิ์ Requester ไม่ตรงกัน) API ต้องคืนค่า `403 Forbidden`
+*   **AC-03:** ถ้าแอบอัปโหลดไฟล์ `.txt` แต่เปลี่ยนนามสกุลเป็น `.jpg` Backend ต้องจับได้จาก MIME Type และตอบ `400 Bad Request`
