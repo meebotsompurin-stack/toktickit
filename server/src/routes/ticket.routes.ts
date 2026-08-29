@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middlewares/auth.middleware';
-import { createTicketHandler, getTicketsHandler } from '../controllers/ticket.controller';
+import { createTicketHandler, getTicketsHandler, getTicketByIdHandler } from '../controllers/ticket.controller';
 import { uploadHandler } from '../controllers/attachment.controller';
 import { uploadSingle } from '../middlewares/upload.middleware';
 
@@ -11,6 +11,9 @@ router.use(authMiddleware);
 
 // GET /api/tickets - ดึงรายการตั๋ว
 router.get('/', getTicketsHandler);
+
+// GET /api/tickets/:ticketId - ดึงรายละเอียดตั๋ว
+router.get('/:ticketId', getTicketByIdHandler);
 
 // POST /api/tickets - สร้างตั๋วใหม่
 router.post('/', createTicketHandler);

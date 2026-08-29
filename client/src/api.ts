@@ -1,28 +1,161 @@
-// Helper ดึง Requester ID มาใส่ Headers (สร้างขึ้นใหม่ตาม Requirement ที่แจ้งให้ใช้)
 export const getRequesterHeaders = (): HeadersInit => {
-  const requesterId = localStorage.getItem('requesterId') || '';
+  const requesterStr = localStorage.getItem('toktickit_requester');
+  let requesterId = '';
+  if (requesterStr) {
+    try {
+      const requester = JSON.parse(requesterStr);
+      requesterId = String(requester.id);
+    } catch (e) {
+      console.error('Error parsing requester:', e);
+    }
+  }
   return {
     'Content-Type': 'application/json',
     'X-Requester-Id': requesterId,
   };
 };
 
-export const getTickets = async (page = 1, limit = 10) => {
-  const response = await fetch(`/api/tickets?page=${page}&limit=${limit}`, {
-    method: 'GET',
-    headers: getRequesterHeaders(),
-  });
-
-  if (!response.ok) {
-    let errorMessage = 'Failed to fetch tickets';
+// Helper สำหรับ FormData เนื่องจากไม่ควรเซ็ต Content-Type เอง
+export const getFormDataHeaders = (): HeadersInit => {
+  const requesterStr = localStorage.getItem('toktickit_requester');
+  let requesterId = '';
+  if (requesterStr) {
     try {
-      const errorData = await response.json();
-      errorMessage = errorData.message || errorMessage;
+      const requester = JSON.parse(requesterStr);
+      requesterId = String(requester.id);
     } catch (e) {
-      // json parse failed
+      console.error('Error parsing requester:', e);
     }
-    throw new Error(errorMessage);
   }
+  return {
+    'X-Requester-Id': requesterId,
+  };
+};
 
-  return response.json();
+export const getTickets = async (page = 1, limit = 10) => {
+  try {
+    const response = await fetch(`/api/tickets?page=${page}&limit=${limit}`, {
+      method: 'GET',
+      headers: getRequesterHeaders(),
+    });
+    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error('API Error - getTickets:', error);
+    throw error;
+  }
+};
+
+export const getCategories = async () => {
+  try {
+    const response = await fetch('/api/categories', {
+      method: 'GET',
+      headers: getRequesterHeaders(),
+    });
+    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error('API Error - getCategories:', error);
+    throw error;
+  }
+};
+
+export const getRelatedSystems = async () => {
+  try {
+    const response = await fetch('/api/related-systems', {
+      method: 'GET',
+      headers: getRequesterHeaders(),
+    });
+    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error('API Error - getRelatedSystems:', error);
+    throw error;
+  }
+};
+
+export const createTicket = async (data: any) => {
+  try {
+    const response = await fetch('/api/tickets', {
+      method: 'POST',
+      headers: getRequesterHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      let msg = 'Failed to create ticket';
+      try {
+        const eData = await response.json();
+        msg = eData.message || msg;
+      } catch {}
+      throw new Error(msg);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('API Error - createTicket:', error);
+    throw error;
+  }
+};
+
+export const uploadAttachment = async (ticketId: string, file: File) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`/api/tickets/${ticketId}/attachments`, {
+      method: 'POST',
+      headers: getFormDataHeaders(),
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      let msg = 'Failed to upload attachment';
+      try {
+        const eData = await response.json();
+        msg = eData.message || msg;
+      } catch {}
+      throw new Error(msg);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('API Error - uploadAttachment:', error);
+    throw error;
+  }
+};
+
+export const getTicketById = async (ticketId: string) => {
+  try {
+    const response = await fetch(`/api/tickets/${ticketId}`, {
+      method: 'GET',
+      headers: getRequesterHeaders(),
+    });
+    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error('API Error - getTicketById:', error);
+    throw error;
+  }
+};
+
+export const deleteAttachment = async (_ticketId: string, attachmentId: string) => {
+  try {
+    // The user requested to shoot to /api/tickets/${ticketId}/attachments/${attachmentId}
+    // But the backend route in attachment.routes.ts is DELETE /api/attachments/:id
+    // Since I cannot edit the backend, I must use the existing backend route.
+    const response = await fetch(`/api/attachments/${attachmentId}`, {
+      method: 'DELETE',
+      headers: getRequesterHeaders(),
+    });
+    if (!response.ok) {
+      let msg = 'Failed to delete attachment';
+      try {
+        const eData = await response.json();
+        msg = eData.message || msg;
+      } catch {}
+      throw new Error(msg);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('API Error - deleteAttachment:', error);
+    throw error;
+  }
 };

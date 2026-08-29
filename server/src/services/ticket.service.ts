@@ -114,7 +114,14 @@ export const getTickets = async (
 
 export const getTicketById = async (ticketId: string) => {
   return await prisma.ticket.findUnique({
-    where: { id: ticketId }
+    where: { id: ticketId },
+    include: {
+      category: true,
+      relatedSystem: true,
+      attachments: {
+        where: { isRemoved: false }
+      }
+    }
   });
 };
 

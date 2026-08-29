@@ -16,7 +16,11 @@ interface Metadata {
   totalPages: number;
 }
 
-export const MyTickets: React.FC = () => {
+interface Props {
+  onView?: (ticketId: string) => void;
+}
+
+export const MyTickets: React.FC<Props> = ({ onView }) => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [meta, setMeta] = useState<Metadata | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,12 +81,21 @@ export const MyTickets: React.FC = () => {
                   <th className="py-3 px-4 font-semibold">Summary</th>
                   <th className="py-3 px-4 font-semibold">Status</th>
                   <th className="py-3 px-4 font-semibold">Priority</th>
+                  <th className="py-3 px-4 font-semibold text-center">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {tickets.map(ticket => (
                   <tr key={ticket.id} className="border-b hover:bg-zenPale transition-colors">
-                    <td className="py-3 px-4 text-zenSecondary font-medium">{ticket.ticketNumber}</td>
+                    <td className="py-3 px-4 text-zenSecondary font-medium">
+                      {onView ? (
+                        <button onClick={() => onView(ticket.id)} className="hover:underline hover:text-zenPrimary">
+                          {ticket.ticketNumber}
+                        </button>
+                      ) : (
+                        ticket.ticketNumber
+                      )}
+                    </td>
                     <td className="py-3 px-4 text-gray-800">
                       <div className="truncate max-w-xs" title={ticket.summary}>
                         {ticket.summary}
@@ -101,6 +114,14 @@ export const MyTickets: React.FC = () => {
                         {ticket.requestedPriority}
                       </span>
                     </td>
+                    <td className="py-3 px-4 text-center">
+                      <button 
+                        onClick={() => onView && onView(ticket.id)}
+                        className="text-zenPrimary hover:text-white border border-zenPrimary hover:bg-zenPrimary px-3 py-1 rounded transition-colors text-sm font-medium"
+                      >
+                        View
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -112,7 +133,13 @@ export const MyTickets: React.FC = () => {
             {tickets.map(ticket => (
               <div key={ticket.id} className="border rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex justify-between items-start mb-2">
-                  <span className="text-zenSecondary font-bold">{ticket.ticketNumber}</span>
+                  {onView ? (
+                    <button onClick={() => onView(ticket.id)} className="text-zenSecondary font-bold hover:underline">
+                      {ticket.ticketNumber}
+                    </button>
+                  ) : (
+                    <span className="text-zenSecondary font-bold">{ticket.ticketNumber}</span>
+                  )}
                   <span className={`inline-block px-2 py-1 rounded-full text-xs font-semibold
                         ${ticket.requestedPriority === 'High' ? 'bg-red-100 text-red-800' : 
                           ticket.requestedPriority === 'Medium' ? 'bg-yellow-100 text-yellow-800' : 
@@ -123,10 +150,16 @@ export const MyTickets: React.FC = () => {
                 <p className="text-gray-800 font-medium mb-3 line-clamp-2" title={ticket.summary}>
                   {ticket.summary}
                 </p>
-                <div className="text-sm">
+                <div className="flex justify-between items-center text-sm">
                   <span className="inline-block bg-zenBg text-gray-700 px-2 py-1 rounded-full border border-gray-300">
                     Status: {ticket.status}
                   </span>
+                  <button 
+                    onClick={() => onView && onView(ticket.id)}
+                    className="text-zenPrimary font-semibold hover:underline"
+                  >
+                    View Detail
+                  </button>
                 </div>
               </div>
             ))}
