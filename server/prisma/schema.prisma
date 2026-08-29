@@ -7,8 +7,74 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum Priority {
+  Low
+  Medium
+  High
+}
+
+enum TicketStatus {
+  New
+  Open
+  InProgress
+  Resolved
+  Closed
+}
+
 model Category {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(uuid())
   name      String   @unique
+  tickets   Ticket[]
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RelatedSystem {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  tickets   Ticket[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Requester {
+  id        String   @id @default(uuid())
+  name      String
+  tickets   Ticket[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Ticket {
+  id                String         @id @default(uuid())
+  ticketNumber      String         @unique
+  categoryId        String
+  category          Category       @relation(fields: [categoryId], references: [id])
+  relatedSystemId   String
+  relatedSystem     RelatedSystem  @relation(fields: [relatedSystemId], references: [id])
+  requestedPriority Priority
+  status            TicketStatus
+  summary           String         @db.VarChar(100)
+  description       String         @db.VarChar(1000)
+  requesterId       String
+  requester         Requester      @relation(fields: [requesterId], references: [id])
+  attachments       Attachment[]
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([requesterId])
+}
+
+model Attachment {
+  id        String    @id @default(uuid())
+  ticketId  String
+  ticket    Ticket    @relation(fields: [ticketId], references: [id])
+  filename  String
+  mimetype  String
+  size      Int
+  isRemoved Boolean   @default(false)
+  deletedBy String?
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
