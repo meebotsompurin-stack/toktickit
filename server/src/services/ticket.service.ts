@@ -50,11 +50,13 @@ export const getTickets = async (
     categoryId?: string;
     priority?: string;
     status?: string;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
     page: number;
     limit: number;
   }
 ) => {
-  const { search, categoryId, priority, status, page, limit } = params;
+  const { search, categoryId, priority, status, sortBy = 'createdAt', sortOrder = 'desc', page, limit } = params;
   
   const where: Prisma.TicketWhereInput = {
     requesterId, // ดูเฉพาะตั๋วของตัวเองตาม Requester ID
@@ -80,14 +82,19 @@ export const getTickets = async (
   }
   
   const skip = (page - 1) * limit;
+
+  // จัดเรียง
+  const orderBy: Prisma.TicketOrderByWithRelationInput = {
+    [sortBy]: sortOrder
+  };
   
   // Query ข้อมูลกับนับจำนวนรวมพร้อมกัน (เพื่อประสิทธิภาพ)
-  const [items, totalItems] = await Promise.all([
+  const [data, total] = await Promise.all([
     prisma.ticket.findMany({
       where,
       skip,
       take: limit,
-      orderBy: { createdAt: 'desc' },
+      orderBy,
       include: {
         category: true,
         relatedSystem: true,
@@ -99,14 +106,14 @@ export const getTickets = async (
     prisma.ticket.count({ where })
   ]);
   
-  const totalPages = Math.ceil(totalItems / limit);
+  const totalPages = Math.ceil(total / limit);
   
   return {
-    items,
-    metadata: {
-      currentPage: page,
-      itemsPerPage: limit,
-      totalItems,
+    data,
+    meta: {
+      page,
+      limit,
+      total,
       totalPages: totalPages === 0 ? 1 : totalPages
     }
   };

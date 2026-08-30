@@ -32,9 +32,34 @@ export const getFormDataHeaders = (): HeadersInit => {
   };
 };
 
-export const getTickets = async (page = 1, limit = 10) => {
+interface GetTicketsParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  categoryId?: string;
+  priority?: string;
+  status?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export const getTickets = async (params: GetTicketsParams = {}) => {
   try {
-    const response = await fetch(`/api/tickets?page=${page}&limit=${limit}`, {
+    const query = new URLSearchParams();
+    if (params.page) query.append('page', params.page.toString());
+    else query.append('page', '1');
+    
+    if (params.limit) query.append('limit', params.limit.toString());
+    else query.append('limit', '10');
+
+    if (params.search) query.append('search', params.search);
+    if (params.categoryId) query.append('categoryId', params.categoryId);
+    if (params.priority) query.append('priority', params.priority);
+    if (params.status) query.append('status', params.status);
+    if (params.sortBy) query.append('sortBy', params.sortBy);
+    if (params.sortOrder) query.append('sortOrder', params.sortOrder);
+
+    const response = await fetch(`/api/tickets?${query.toString()}`, {
       method: 'GET',
       headers: getRequesterHeaders(),
     });
@@ -96,10 +121,10 @@ export const createTicket = async (data: any) => {
   }
 };
 
-export const uploadAttachment = async (ticketId: string, file: File) => {
+export const uploadAttachmentToTicket = async (ticketId: string, file: File) => {
   try {
     const formData = new FormData();
-    formData.append('file', file);
+    formData.append('attachment', file);
 
     const response = await fetch(`/api/tickets/${ticketId}/attachments`, {
       method: 'POST',
@@ -117,7 +142,7 @@ export const uploadAttachment = async (ticketId: string, file: File) => {
     }
     return await response.json();
   } catch (error) {
-    console.error('API Error - uploadAttachment:', error);
+    console.error('API Error - uploadAttachmentToTicket:', error);
     throw error;
   }
 };
@@ -128,6 +153,7 @@ export const getTicketById = async (ticketId: string) => {
       method: 'GET',
       headers: getRequesterHeaders(),
     });
+    if (response.status === 403) throw new Error('Forbidden');
     if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
     return await response.json();
   } catch (error) {
@@ -156,6 +182,33 @@ export const deleteAttachment = async (_ticketId: string, attachmentId: string) 
     return await response.json();
   } catch (error) {
     console.error('API Error - deleteAttachment:', error);
+    throw error;
+  }
+};
+
+export const downloadAttachment = async (ticketId: string, attachmentId: string, filename: string) => {
+  try {
+    const response = await fetch(`/api/tickets/${ticketId}/attachments/${attachmentId}/download`, {
+      method: 'GET',
+      headers: getRequesterHeaders(),
+    });
+    
+    if (!response.ok) {
+      if (response.status === 403) throw new Error('Forbidden');
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
+    
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error('API Error - downloadAttachment:', error);
     throw error;
   }
 };

@@ -35,3 +35,13 @@
 - [ ] ชื่อไฟล์ยาวๆ ถูกตัดคำด้วย ...
 - [ ] เมื่อเปิดบนมือถือ ตาราง (Table) ต้องเปลี่ยนรูปแบบเป็นการ์ด (Card) เสมอ และต้องไม่มีแถบเลื่อนแนวนอน
 - [ ] กด Submit แล้วปุ่มจะโชว์ Loading spinner และโดน Disable ชั่วคราว
+
+## 6. Advanced Features (Issue 4)
+*   **Search & Filter Controls:**
+    *   หน้า My Tickets จะต้องมี Control Bar ด้านบน ประกอบด้วยช่องค้นหาและ Dropdown 4 ส่วน (Category, Priority, Status, Sort By) 
+    *   ใช้ Grid Layout เพื่อความ Responsive (Desktop 6 คอลัมน์, Mobile เรียงซ้อน)
+    *   มีปุ่ม "Clear Filters" ให้ผู้ใช้กดย้อนกลับไปค่าเริ่มต้น
+*   **Pagination:** 
+    *   ส่วนท้ายตาราง My Tickets จะแสดงเลขหน้าและปุ่ม Previous / Next ที่สามารถ Disable ตัวเองได้หากอยู่หน้าแรกหรือหน้าสุดท้าย
+*   **Access Denied Screen (403):** 
+    *   หากเกิดข้อผิดพลาดด้านสิทธิ์ (403 Forbidden) ระบบจะต้องแสดงการ์ดสีแดงพร้อมไอคอนกากบาท (X) แจ้งข้อความ "Access Denied: You do not have permission to view this ticket." ตรงกลางหน้าจอ พร้อมปุ่มสำหรับกดย้อนกลับ

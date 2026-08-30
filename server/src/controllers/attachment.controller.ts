@@ -40,7 +40,7 @@ export const uploadHandler = async (req: Request, res: Response, next: NextFunct
       throw { statusCode: 400, error: 'Bad Request', message: 'Unknown file type or invalid signature' };
     }
 
-    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
+    const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
     if (!allowedMimeTypes.includes(meta.mime)) {
       fs.unlinkSync(req.file.path);
       throw { statusCode: 400, error: 'Bad Request', message: 'File type not allowed. Only images and PDFs are permitted.' };
@@ -79,6 +79,42 @@ export const deleteHandler = async (req: Request, res: Response, next: NextFunct
     await AttachmentService.softRemoveAttachment(id, requesterId);
 
     res.status(200).json({ message: 'Attachment successfully removed' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+import path from 'path';
+
+export const downloadAttachmentHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const requesterId = req.header('X-Requester-Id') as string;
+    const { ticketId, attachmentId } = req.params;
+
+    const attachment = await AttachmentService.getAttachmentWithTicket(attachmentId);
+    
+    // 1. ตรวจสอบว่ามีไฟล์ และยังไม่ถูก soft-remove
+    if (!attachment || attachment.isRemoved) {
+      throw { statusCode: 404, error: 'Not Found', message: 'Attachment not found' };
+    }
+
+    // 2. ตรวจสอบว่าไฟล์นี้ผูกกับ ticketId ที่ระบุหรือไม่ (ป้องกันกรณีเอา attachmentId ไปเสียบกับ ticket อื่น)
+    if (attachment.ticketId !== ticketId) {
+      throw { statusCode: 404, error: 'Not Found', message: 'Attachment not found on this ticket' };
+    }
+
+    // 3. ตรวจสอบ Ownership
+    if (attachment.ticket.requesterId !== requesterId) {
+      throw { statusCode: 403, error: 'Forbidden', message: 'You do not have permission to download this file' };
+    }
+
+    const filePath = path.join(process.cwd(), 'uploads', attachment.filename);
+
+    if (!fs.existsSync(filePath)) {
+      throw { statusCode: 404, error: 'Not Found', message: 'File not found on server' };
+    }
+
+    res.download(filePath, attachment.filename);
   } catch (error) {
     next(error);
   }
