@@ -1,7 +1,8 @@
 # Lab 2 API Contract
 
 ## Global Headers
-*   **Authentication:** ทุก Endpoint ที่ต้องการตรวจสอบสิทธิ์ผู้ใช้งาน จะต้องส่งไอดีผ่าน **HTTP Header** ที่ชื่อว่า `X-Requester-Id` เสมอ (ห้ามส่งผ่าน Request Body หรือ Query Parameters เด็ดขาด) เพื่อป้องกันการสวมรอย
+*   **Authentication & Security:** ทุก Endpoint ที่ต้องการตรวจสอบสิทธิ์ผู้ใช้งาน จะต้องส่งไอดีผ่าน **HTTP Header** ที่ชื่อว่า `X-Requester-Id` เสมอ (ห้ามส่งผ่าน Request Body หรือ Query Parameters เด็ดขาด) เพื่อป้องกันการสวมรอย
+*   **File Upload Security:** ระบบจะใช้ไลบรารี `file-type` ตรวจสอบ MIME Type จากเนื้อหาไฟล์จริงแบบ Magic Bytes (ไม่อนุญาตให้ตรวจสอบแค่จากนามสกุลไฟล์)
 
 ## 1. Base API URL
 `/api`
@@ -48,11 +49,13 @@
 ## 3. Standard Error Responses
 
 ### 400 Bad Request (Validation Error)
+ตัวอย่าง Schema กรณีที่มี Error รายฟิลด์ (Field-level validation):
 ```json
 {
   "error": "Validation Failed",
   "details": [
-    { "field": "summary", "message": "Summary must not exceed 100 characters" }
+    { "field": "summary", "message": "Summary must not exceed 100 characters" },
+    { "field": "categoryId", "message": "Category is required" }
   ]
 }
 ```
@@ -83,7 +86,8 @@
 
 ## 4. Pagination Rules (สำหรับ GET /tickets)
 *   **Default Params:** `page=1`, `limit=10`
-*   **Response Metadata:** ต้องส่งกลับมาพร้อม Object:
+*   **Maximum Limit:** `limit` สูงสุดไม่เกิน `50` ต่อหน้า
+*   **Response Metadata:** ต้องส่งกลับมาพร้อม Object ตามรูปแบบ:
 ```json
 {
   "currentPage": 1,

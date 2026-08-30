@@ -20,10 +20,10 @@ IT Department ต้องการระบบให้พนักงานแ
 *   BR-01: Backend เป็นผู้สร้าง Ticket Number อย่างเป็นทางการและต้องไม่ซ้ำกัน
 *   BR-02: Ticket ใหม่ต้องเริ่มต้นด้วยสถานะ "New" เสมอ
 *   BR-03: หน้า Development Requester ใช้สำหรับจำลองการทดสอบเท่านั้น ไม่ใช่ระบบ Authentication
-*   BR-04: **Required Fields & Constraints:** ฟิลด์ Category, Requested Priority, และ Related System เป็นข้อมูลบังคับกรอก (Required) โดย Summary จำกัดความยาวสูงสุด 100 ตัวอักษร และ Description จำกัดสูงสุด 1,000 ตัวอักษร
-*   BR-05: **Enum Values:** ค่า Requested Priority ที่อนุญาตคือ Low, Medium, High และ ค่า Status ที่ระบบรองรับคือ New, Open, In Progress, Resolved, Closed *(หมายเหตุ: สำหรับการพัฒนาใน Lab 2 จะจำกัดการทำงานและแสดงผลเฉพาะสถานะ "New" เท่านั้น)*
+*   BR-04: **Required Fields & Constraints:** ฟิลด์บังคับกรอก (Required Fields) ได้แก่ Category, Requested Priority, และ Related System โดยกำหนดความยาวสูงสุด (Max length) ของ Summary = 100 ตัวอักษร และ Description = 1000 ตัวอักษร
+*   BR-05: **Enum Values:** ค่า Priority ที่อนุญาตคือ Low, Medium, High และ ค่า Status ที่ระบบรองรับคือ New, Open, Resolved *(หมายเหตุ: สำหรับการพัฒนาใน Lab 2 จะจำกัดการทำงานและแสดงผลเฉพาะสถานะ "New" เท่านั้น)*
 *   BR-06: **Attachment Security:** ฝั่ง Backend ต้องตรวจสอบประเภทไฟล์ที่อนุญาตจากเนื้อหา "MIME Type" ของจริงเท่านั้น ห้ามพึ่งพาการตรวจสอบจากนามสกุลไฟล์ (File Extension) ที่ส่งมาจากหน้าบ้านเพียงอย่างเดียว
-*   BR-07: **Soft-removal Policy:** การลบไฟล์แนบจะเป็นแบบ Soft-removal (ไม่ลบไฟล์จริงออกจากฐานข้อมูล) โดยระบบจะต้องเก็บ Metadata ไว้ตรวจสอบย้อนหลัง (ใครเป็นคนลบ `deletedBy`, ลบเมื่อไหร่ `deletedAt`) และกำหนดให้มีเพียงบทบาท `Admin` เท่านั้นที่สามารถลบถาวร (Hard-delete) หรือกู้คืน (Restore) ได้
+*   BR-07: **Soft-removal Policy:** การลบไฟล์แนบจะเป็นแบบ Soft-removal (ไม่ลบไฟล์จริงออกจากฐานข้อมูล) โดยระบบจะอัปเดตสถานะเป็น `isRemoved = true` พร้อมบันทึก `deletedBy` และ `deletedAt` ไว้ตรวจสอบย้อนหลัง และกำหนดให้มีเพียงบทบาท `Admin` เท่านั้นที่สามารถลบถาวร (Hard-delete) หรือกู้คืน (Restore) ได้
 *   BR-08: **Cross-Requester Security (Download):** ห้ามเสิร์ฟไฟล์ตรงๆ จากโฟลเดอร์ผ่าน Static Server ทุกการดาวน์โหลดต้องผ่าน API endpoint ที่ทำการตรวจสอบความเป็นเจ้าของตั๋วก่อนเสมอ
 
 ## 6. Data Changes (Database Schema)
