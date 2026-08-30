@@ -25,7 +25,7 @@ const upload = multer({
 });
 
 export const uploadSingle = (req: Request, res: Response, next: NextFunction) => {
-  const uploader = upload.single('file');
+  const uploader = upload.single('attachment');
   uploader(req, res, (err) => {
     if (err instanceof multer.MulterError) {
       if (err.code === 'LIMIT_FILE_SIZE') {

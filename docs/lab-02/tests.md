@@ -13,10 +13,15 @@
 | API-07 | File Upload | อัปโหลดไฟล์เกินโควต้า (เช่น อัปโหลด 6 ไฟล์พร้อมกัน) | 400 Bad Request | Pending |
 | API-08 | Security | ส่ง Request โดยไม่มีการแนบ Header `X-Requester-Id` หรือค่าไม่ถูกต้อง | 401 Unauthorized | Pending |
 | API-09 | Security | ตรวจสอบว่าระบบบันทึก Metadata (`deletedAt`, `deletedBy`) ครบถ้วนเมื่อทำการ Soft-remove | 200 OK และตรวจสอบพบ Metadata ใน Database (`deletedBy` ตรงกับ Header) | Pending |
-| API-10 | Security | จำลองสิทธิ์ Requester ธรรมดาพยายามลบไฟล์ถาวร (Hard-delete) หรือกู้คืน (Restore) | 403 Forbidden | Deferred to Lab 3 (Out of Scope: ระบบ Admin ไม่อยู่ในขอบเขตของ Lab 2) |
+| API-10 | Security | จำลองสิทธิ์ Requester ธรรมดาพยายามลบไฟล์ถาวร (Hard-delete) หรือกู้คืน (Restore) | 403 Forbidden | Deferred to Lab 3 |
+| API-11 | Ticket | ดึงข้อมูลตั๋วโดยส่งพารามิเตอร์ search, categoryId, sortBy, page, limit | คืนค่า { data, meta } ตรงตามเงื่อนไขการค้นหาและเรียงลำดับ | Pending |
+| API-12 | Security | ทดสอบดาวน์โหลดไฟล์ผ่าน `/api/.../download` ด้วย Requester ID ของตัวเองและของคนอื่น | 200 OK (ถ้าตัวเอง), 403 Forbidden (ถ้าคนอื่น) | Pending |
 | UI-01 | Validation | กด Submit โดยเว้นว่างช่อง Summary และ Description | แสดงข้อความ Error สีแดงใต้ฟิลด์ | Pending |
 | UI-03 | a11y | จำลองการใช้คีย์บอร์ดนำทาง (Tab) เพื่อตรวจสอบการแสดงผลของกรอบ Focus | กรอบ Focus แสดงผลชัดเจน | Pending |
 | UI-04 | Responsive | E2E Test ตรวจสอบการแสดงผลบนจอมือถือ | ตารางรายการตั๋ว (Table) ถูกแปลงเป็นการ์ด (Card) อย่างถูกต้อง | Pending |
+| UI-05 | Pagination | พิมพ์ค้นหาหรือเลือก Filter ในหน้า My Tickets ขณะที่อยู่หน้า 3 | ค่า page ถูกรีเซ็ตกลับเป็น 1 | Pending |
+| UI-06 | Security | จำลองสถานการณ์ 403 Forbidden จาก Backend เพื่อดูหน้าต่างปฏิเสธการเข้าถึง | แสดงหน้าจอ Access Denied สีแดง และปุ่ม Go Back | Pending |
+| E2E-01 | Workflow | จำลอง Flow สร้างตั๋ว -> ดูรายการตั๋ว -> ฟิลเตอร์ค้นหา -> เข้าดูรายละเอียดตั๋ว -> โหลดไฟล์และลบไฟล์ | ทุกขั้นตอนสำเร็จ ไม่มี Error | Pending |
 
 ## 3. Known Limitations
 - เนื่องจาก Lab 2 ยังไม่มีระบบ Authentication จริง การทดสอบจึงทำผ่าน Development Requester Context เท่านั้น

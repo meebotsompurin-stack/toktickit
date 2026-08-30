@@ -63,6 +63,8 @@ export const getTicketsHandler = async (req: Request, res: Response, next: NextF
     const categoryId = req.query.categoryId as string | undefined;
     const priority = req.query.priority as string | undefined;
     const status = req.query.status as string | undefined;
+    const sortBy = req.query.sortBy as string | undefined;
+    const sortOrder = req.query.sortOrder as 'asc' | 'desc' | undefined;
     
     // Pagination defaults: page=1, limit=10 (max 50)
     let page = parseInt(req.query.page as string, 10);
@@ -77,14 +79,13 @@ export const getTicketsHandler = async (req: Request, res: Response, next: NextF
       categoryId,
       priority,
       status,
+      sortBy,
+      sortOrder,
       page,
       limit
     });
 
-    res.status(200).json({
-      data: result.items,
-      ...result.metadata
-    });
+    res.status(200).json(result);
   } catch (error) {
     next(error);
   }

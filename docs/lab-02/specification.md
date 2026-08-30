@@ -24,6 +24,7 @@ IT Department ต้องการระบบให้พนักงานแ
 *   BR-05: **Enum Values:** ค่า Requested Priority ที่อนุญาตคือ Low, Medium, High และ ค่า Status ที่ระบบรองรับคือ New, Open, In Progress, Resolved, Closed *(หมายเหตุ: สำหรับการพัฒนาใน Lab 2 จะจำกัดการทำงานและแสดงผลเฉพาะสถานะ "New" เท่านั้น)*
 *   BR-06: **Attachment Security:** ฝั่ง Backend ต้องตรวจสอบประเภทไฟล์ที่อนุญาตจากเนื้อหา "MIME Type" ของจริงเท่านั้น ห้ามพึ่งพาการตรวจสอบจากนามสกุลไฟล์ (File Extension) ที่ส่งมาจากหน้าบ้านเพียงอย่างเดียว
 *   BR-07: **Soft-removal Policy:** การลบไฟล์แนบจะเป็นแบบ Soft-removal (ไม่ลบไฟล์จริงออกจากฐานข้อมูล) โดยระบบจะต้องเก็บ Metadata ไว้ตรวจสอบย้อนหลัง (ใครเป็นคนลบ `deletedBy`, ลบเมื่อไหร่ `deletedAt`) และกำหนดให้มีเพียงบทบาท `Admin` เท่านั้นที่สามารถลบถาวร (Hard-delete) หรือกู้คืน (Restore) ได้
+*   BR-08: **Cross-Requester Security (Download):** ห้ามเสิร์ฟไฟล์ตรงๆ จากโฟลเดอร์ผ่าน Static Server ทุกการดาวน์โหลดต้องผ่าน API endpoint ที่ทำการตรวจสอบความเป็นเจ้าของตั๋วก่อนเสมอ
 
 ## 6. Data Changes (Database Schema)
 โครงสร้างฐานข้อมูลที่เพิ่มขึ้นหรือเปลี่ยนแปลงใน Lab นี้:
@@ -48,11 +49,18 @@ IT Department ต้องการระบบให้พนักงานแ
     *   `deletedBy` (String, Nullable)
     *   `deletedAt` (Timestamp, Nullable)
 
-## 7. Acceptance Criteria (AC)
+## 7. API Contract (Selected)
+*   **GET `/api/tickets`**: รับ Query Params (`search`, `categoryId`, `priority`, `status`, `sortBy`, `sortOrder`, `page`, `limit`) คืนค่าเป็น `{ data: Ticket[], meta: { total, page, limit, totalPages } }`
+*   **GET `/api/tickets/:ticketId/attachments/:attachmentId/download`**: ตรวจสอบความเป็นเจ้าของ หากถูกต้องคืนค่าไฟล์แนบ (File Stream)
+*   **POST `/api/tickets/:ticketId/attachments`**: อัปโหลดไฟล์แนบเพิ่มเติมในตั๋วที่มีอยู่
+
+## 8. Acceptance Criteria (AC)
 *   **AC-01:** ถ้าพิมพ์ Summary เกิน 100 ตัวอักษร ฟอร์มต้องไม่ถูกส่งและขึ้น Error สีแดงใต้ฟิลด์
-*   **AC-02:** ถ้าพยายามเข้าดูตั๋วของคนอื่น (สิทธิ์ Requester ไม่ตรงกัน) API ต้องคืนค่า `403 Forbidden`
+*   **AC-02:** ถ้าพยายามเข้าดูตั๋วของคนอื่น (สิทธิ์ Requester ไม่ตรงกัน) API ต้องคืนค่า `403 Forbidden` และ UI ต้องแสดงหน้า Access Denied
 *   **AC-03:** ถ้าแอบอัปโหลดไฟล์ `.txt` แต่เปลี่ยนนามสกุลเป็น `.jpg` Backend ต้องจับได้จาก MIME Type และตอบ `400 Bad Request`
 *   **AC-04:** ถ้าผู้ใช้ไม่กรอกข้อมูลฟิลด์บังคับ (Category, Related System, Priority) ระบบจะต้องแสดง Error แจ้งเตือนและไม่บันทึกข้อมูล
 *   **AC-05:** ถ้าผู้ใช้พิมพ์ Description ยาวเกิน 1,000 ตัวอักษร ระบบต้องบล็อกการส่งฟอร์มและแจ้งเตือน Error
 *   **AC-06:** เมื่อเข้าหน้า My Tickets ระบบต้องรองรับการแบ่งหน้า (Pagination) ตามค่า Default (page=1, limit=10) ได้อย่างถูกต้อง
 *   **AC-07:** เมื่อทำการลบไฟล์แนบ (Soft-remove) ระบบจะต้องซ่อนไฟล์นั้นจากการแสดงผล และต้องมีการบันทึกค่า `deletedBy` และ `deletedAt` ลงในฐานข้อมูลเสมอ
+*   **AC-08:** เมื่อผู้ใช้เปลี่ยนคำค้นหา (Search) หรือเปลี่ยนค่า Filter ในหน้า My Tickets ตัวแปร `page` ต้องถูกรีเซ็ตกลับเป็น 1 เสมอ
+*   **AC-09:** การดาวน์โหลดไฟล์ต้องไม่พบ Error 403 (ถ้าเป็นเจ้าของ) หรือ 404 (ถ้าไฟล์ยังไม่โดนลบ) และไม่สามารถดาวน์โหลดผ่าน URL ตรงๆ (/uploads/...) ได้อีกต่อไป

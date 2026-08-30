@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getCategories, getRelatedSystems, createTicket, uploadAttachment } from '../api';
+import { getCategories, getRelatedSystems, createTicket, uploadAttachmentToTicket } from '../api';
 
 interface Category {
   id: string;
@@ -75,8 +75,8 @@ export const CreateTicket: React.FC<Props> = ({ onCancel, onSuccess }) => {
       
       const newTicket = await createTicket(ticketPayload);
       
-      if (file && newTicket && newTicket.id) {
-        await uploadAttachment(newTicket.id, file);
+      if (file) {
+        await uploadAttachmentToTicket(newTicket.id, file);
       }
       
       onSuccess();

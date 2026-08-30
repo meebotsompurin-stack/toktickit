@@ -21,8 +21,7 @@ const prisma = new PrismaClient();
 app.use(cors());
 app.use(express.json());
 
-// เสิร์ฟไฟล์ Static สำหรับโฟลเดอร์ uploads (เพื่อดาวน์โหลดไฟล์แนบ)
-app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
 
 // ----------------------------------------------------
 // Public / Unprotected Routes (ถ้ามีในอนาคต)
