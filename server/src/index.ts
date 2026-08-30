@@ -4,9 +4,13 @@ dotenv.config();
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import cors from 'cors';
+import path from 'path';
 
 import ticketRoutes from './routes/ticket.routes';
 import attachmentRoutes from './routes/attachment.routes';
+import requesterRoutes from './requesters/requester.routes';
+import categoryRoutes from './categories/category.routes';
+import relatedSystemRoutes from './related-systems/related-system.routes';
 import { errorMiddleware } from './middlewares/error.middleware';
 
 const app = express();
@@ -16,6 +20,9 @@ const prisma = new PrismaClient();
 // Middlewares
 app.use(cors());
 app.use(express.json());
+
+// เสิร์ฟไฟล์ Static สำหรับโฟลเดอร์ uploads (เพื่อดาวน์โหลดไฟล์แนบ)
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // ----------------------------------------------------
 // Public / Unprotected Routes (ถ้ามีในอนาคต)
@@ -29,8 +36,9 @@ app.get('/api/health', (req, res) => {
 // ----------------------------------------------------
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/attachments', attachmentRoutes);
-
-// * สามารถเพิ่ม Route อื่นๆ ในอนาคตเช่น /api/categories ได้ตรงนี้
+app.use('/api/requesters', requesterRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/related-systems', relatedSystemRoutes);
 
 // ----------------------------------------------------
 // Global Error Handler (ต้องอยู่ล่างสุดเสมอ)

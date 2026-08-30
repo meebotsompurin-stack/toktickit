@@ -89,3 +89,25 @@ export const getTicketsHandler = async (req: Request, res: Response, next: NextF
     next(error);
   }
 };
+
+export const getTicketByIdHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const requesterId = req.header('X-Requester-Id') as string;
+    const { ticketId } = req.params;
+
+    const ticket = await TicketService.getTicketById(ticketId);
+
+    if (!ticket) {
+      throw { statusCode: 404, error: 'Not Found', message: 'Ticket not found' };
+    }
+
+    // Check ownership if required (Optional based on business rules, but good practice)
+    if (ticket.requesterId !== requesterId) {
+      throw { statusCode: 403, error: 'Forbidden', message: 'You do not have permission to view this ticket' };
+    }
+
+    res.status(200).json(ticket);
+  } catch (error) {
+    next(error);
+  }
+};

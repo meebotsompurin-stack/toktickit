@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
 import fs from 'fs';
-import { fileTypeFromFile } from 'file-type';
 import * as AttachmentService from '../services/attachment.service';
 import * as TicketService from '../services/ticket.service';
 
@@ -26,7 +25,16 @@ export const uploadHandler = async (req: Request, res: Response, next: NextFunct
     }
 
     // 2. ความปลอดภัย (BR-06): ตรวจสอบ MIME Type จากเนื้อหาไฟล์จริงๆ
-    const meta = await fileTypeFromFile(req.file.path);
+    // ใช้ Dynamic Import ตามคำแนะนำเพื่อเลี่ยงปัญหา ESM / CommonJS
+    const fileTypeModule = await eval('import("file-type")');
+    // รองรับทั้ง v16 (fromFile) และ v17+ (fileTypeFromFile)
+    const checkFileType = fileTypeModule.fileTypeFromFile || fileTypeModule.default?.fromFile || fileTypeModule.fromFile;
+    
+    if (!checkFileType) {
+       throw new Error('Cannot load file-type module function');
+    }
+
+    const meta = await checkFileType(req.file.path);
     if (!meta) {
       fs.unlinkSync(req.file.path);
       throw { statusCode: 400, error: 'Bad Request', message: 'Unknown file type or invalid signature' };
