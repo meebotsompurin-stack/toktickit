@@ -24,6 +24,12 @@ export const uploadHandler = async (req: Request, res: Response, next: NextFunct
       throw { statusCode: 403, error: 'Forbidden', message: 'You do not have permission to perform this action' };
     }
 
+    // ตรวจสอบจำนวนไฟล์แนบ ห้ามเกิน 5 ไฟล์ (isRemoved: false)
+    if (ticket.attachments && ticket.attachments.length >= 5) {
+      fs.unlinkSync(req.file.path);
+      throw { statusCode: 400, error: 'Bad Request', message: 'Attachment limit of 5 exceeded' };
+    }
+
     // 2. ความปลอดภัย (BR-06): ตรวจสอบ MIME Type จากเนื้อหาไฟล์จริงๆ
     // ใช้ Dynamic Import ตามคำแนะนำเพื่อเลี่ยงปัญหา ESM / CommonJS
     const fileTypeModule = await eval('import("file-type")');
