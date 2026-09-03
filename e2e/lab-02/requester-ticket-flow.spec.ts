@@ -52,10 +52,8 @@ test.describe('Lab 2: Requester Ticket Flow (Issue 4)', () => {
     // 4. ทดสอบพิมพ์คำค้นหา (Search) 
     await page.getByPlaceholder('Search Ticket # or Summary...').fill(uniqueSummary);
     
-    // รอ debounce 500ms
-    await page.waitForTimeout(600);
-    
     // ต้องเจอ Ticket ใหม่ที่เพิ่งสร้างในตาราง (ระบุเป็น td เพื่อป้องกัน Strict Mode Violation กับช่อง Search)
+    // Playwright's auto-retrying assertion จะรอให้ผลลัพธ์ปรากฏขึ้นมาเองโดยอัตโนมัติ (ครอบคลุมจังหวะ debounce แล้ว)
     await expect(page.locator('td').filter({ hasText: uniqueSummary }).first()).toBeVisible();
 
     // 5. กด View เข้าไปหน้า Ticket Detail
@@ -78,5 +76,18 @@ test.describe('Lab 2: Requester Ticket Flow (Issue 4)', () => {
     // ตรวจสอบว่าชื่อไฟล์หายไป
     await expect(page.getByText(/\.pdf$/i)).not.toBeVisible();
     await expect(page.getByText('No attachments')).toBeVisible();
+
+    // 7. ถ่าย Screenshot ของหน้า Ticket Detail ในขนาดหน้าจอต่างๆ
+    // Desktop
+    await page.setViewportSize({ width: 1280, height: 720 });
+    await page.screenshot({ path: 'artifacts/lab-02/screenshots/ticket-detail/desktop.png', fullPage: true });
+
+    // Tablet
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.screenshot({ path: 'artifacts/lab-02/screenshots/ticket-detail/tablet.png', fullPage: true });
+
+    // Mobile
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.screenshot({ path: 'artifacts/lab-02/screenshots/ticket-detail/mobile.png', fullPage: true });
   });
 });

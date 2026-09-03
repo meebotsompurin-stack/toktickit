@@ -11,6 +11,7 @@ interface Attachment {
 interface Ticket {
   id: string;
   ticketNumber: string;
+  requesterId: string;
   requestedPriority: string;
   status: string;
   summary: string;
@@ -51,6 +52,25 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
   useEffect(() => {
     fetchTicket();
   }, [ticketId]);
+
+  useEffect(() => {
+    if (ticket) {
+      const requesterStr = localStorage.getItem('toktickit_requester');
+      let currentRequesterId = '';
+      if (requesterStr) {
+        try {
+          const reqObj = JSON.parse(requesterStr);
+          currentRequesterId = String(reqObj.id);
+        } catch (e) {}
+      }
+
+      if (currentRequesterId && String(ticket.requesterId) !== currentRequesterId) {
+        onBack();
+      }
+    } else if (error === 'Forbidden') {
+      onBack();
+    }
+  }, [ticket, error, onBack]);
 
   const handleDeleteAttachment = async (attachmentId: string) => {
     if (!window.confirm('Are you sure you want to delete this attachment?')) return;
