@@ -2,3 +2,15 @@ node_modules/
 .env
 dist/
 build/
+
+# Uploaded files
+server/uploads/*
+!server/uploads/.gitkeep
+
+# Playwright test output artifacts
+test-results/
+playwright-report/
+
+# OS temporary files
+.DS_Store
+Thumbs.db

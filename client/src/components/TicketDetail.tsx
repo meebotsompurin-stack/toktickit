@@ -53,25 +53,6 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
     fetchTicket();
   }, [ticketId]);
 
-  useEffect(() => {
-    if (ticket) {
-      const requesterStr = localStorage.getItem('toktickit_requester');
-      let currentRequesterId = '';
-      if (requesterStr) {
-        try {
-          const reqObj = JSON.parse(requesterStr);
-          currentRequesterId = String(reqObj.id);
-        } catch (e) {}
-      }
-
-      if (currentRequesterId && String(ticket.requesterId) !== currentRequesterId) {
-        onBack();
-      }
-    } else if (error === 'Forbidden') {
-      onBack();
-    }
-  }, [ticket, error, onBack]);
-
   const handleDeleteAttachment = async (attachmentId: string) => {
     if (!window.confirm('Are you sure you want to delete this attachment?')) return;
     
@@ -128,24 +109,45 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
     else return (bytes / 1048576).toFixed(1) + ' MB';
   };
 
+  const requesterStr = localStorage.getItem('toktickit_requester');
+  let currentRequesterId = '';
+  if (requesterStr) {
+    try {
+      const reqObj = JSON.parse(requesterStr);
+      currentRequesterId = String(reqObj.id);
+    } catch (e) {}
+  }
+
+  const isForbidden = error === 'Forbidden' || error?.includes('403') || Boolean(ticket && currentRequesterId && String(ticket.requesterId) !== currentRequesterId);
+
   if (loading) return <div className="p-6 text-zenPrimary font-medium">Loading ticket details...</div>;
 
-  if (error === 'Forbidden') {
+  if (isForbidden) {
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-red-200 p-8 mt-6 max-w-2xl mx-auto text-center">
-        <div className="text-red-500 mb-4 flex justify-center">
-          <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <div className="bg-white rounded-lg shadow-md border border-red-200 overflow-hidden max-w-2xl mx-auto text-center mt-6">
+        <div className="bg-[#8B0000] text-white py-3 px-6 font-bold text-lg flex items-center justify-center space-x-2">
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
           </svg>
+          <span>Access Denied</span>
         </div>
-        <h3 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h3>
-        <p className="text-gray-600 mb-8 font-medium">You do not have permission to view this ticket.</p>
-        <button 
-          onClick={onBack}
-          className="bg-zenPrimary hover:bg-zenSecondary text-white px-6 py-2 rounded shadow-sm transition-colors font-semibold"
-        >
-          Back to My Tickets
-        </button>
+        <div className="p-8">
+          <div className="text-[#8B0000] mb-4 flex justify-center">
+            <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h3 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h3>
+          <p className="text-gray-700 mb-8 font-medium">
+            Access Denied (403 Forbidden): You do not have permission to view this ticket.
+          </p>
+          <button 
+            onClick={onBack}
+            className="bg-[#8B0000] hover:bg-red-800 text-white px-6 py-2.5 rounded shadow-sm transition-colors font-semibold"
+          >
+            Go Back to My Tickets
+          </button>
+        </div>
       </div>
     );
   }
