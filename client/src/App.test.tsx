@@ -1,6 +1,9 @@
+// @vitest-environment jsdom
 import { render, screen, waitFor } from '@testing-library/react';
-import '@testing-library/jest-dom';
+import * as matchers from '@testing-library/jest-dom/matchers';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
+expect.extend(matchers);
 import App from './App';
 
 describe('App Category List UI', () => {
