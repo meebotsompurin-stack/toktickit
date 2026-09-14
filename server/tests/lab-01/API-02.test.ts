@@ -4,7 +4,9 @@ import app from '../../src/index';
 
 describe('GET /api/categories', () => {
   it('should return 200 and an array of exactly 4 categories in order', async () => {
-    const response = await request(app).get('/api/categories');
+    const response = await request(app)
+      .get('/api/categories')
+      .set('X-Requester-Id', 'user-1');
     expect(response.status).toBe(200);
     expect(Array.isArray(response.body)).toBe(true);
     
