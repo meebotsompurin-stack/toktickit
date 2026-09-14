@@ -328,10 +328,10 @@ async function main() {
   console.log('✅ Tickets seeded (6 tickets with mixed statuses, priorities, and owners).');
 
   // ═══════════════════════════════════════════
-  // 6. Public Comments
+  // 6. Comments (Public & Internal)
   // ═══════════════════════════════════════════
   const comment1Id = 'cmt_pub_seed_001';
-  await prisma.publicComment.upsert({
+  await prisma.ticketComment.upsert({
     where: { id: comment1Id },
     update: {},
     create: {
@@ -339,11 +339,12 @@ async function main() {
       ticketId: ticket1.id,
       authorId: requester1.id,
       content: 'I have tried switching between Wi-Fi and LAN cable, but the issue persists on both.',
+      isInternal: false,
     },
   });
 
   const comment2Id = 'cmt_pub_seed_002';
-  await prisma.publicComment.upsert({
+  await prisma.ticketComment.upsert({
     where: { id: comment2Id },
     update: {},
     create: {
@@ -351,11 +352,12 @@ async function main() {
       ticketId: ticket1.id,
       authorId: staff1.id,
       content: 'Thank you for the additional info. I am checking the VPN gateway logs now. Will update you shortly.',
+      isInternal: false,
     },
   });
 
   const comment3Id = 'cmt_pub_seed_003';
-  await prisma.publicComment.upsert({
+  await prisma.ticketComment.upsert({
     where: { id: comment3Id },
     update: {},
     create: {
@@ -363,11 +365,12 @@ async function main() {
       ticketId: ticket2.id,
       authorId: requester2.id,
       content: 'This happens specifically when I try to export the "Monthly Revenue" report for Q3.',
+      isInternal: false,
     },
   });
 
   const comment4Id = 'cmt_pub_seed_004';
-  await prisma.publicComment.upsert({
+  await prisma.ticketComment.upsert({
     where: { id: comment4Id },
     update: {},
     create: {
@@ -375,11 +378,12 @@ async function main() {
       ticketId: ticket4.id,
       authorId: staff1.id,
       content: 'Access has been restored. Please try logging in again and confirm it works.',
+      isInternal: false,
     },
   });
 
   const comment5Id = 'cmt_pub_seed_005';
-  await prisma.publicComment.upsert({
+  await prisma.ticketComment.upsert({
     where: { id: comment5Id },
     update: {},
     create: {
@@ -387,16 +391,14 @@ async function main() {
       ticketId: ticket4.id,
       authorId: requester1.id,
       content: 'Confirmed — I can access the shared mailbox now. Thank you!',
+      isInternal: false,
     },
   });
 
   console.log('✅ Public Comments seeded (5 comments across tickets).');
 
-  // ═══════════════════════════════════════════
-  // 7. Internal Notes (IT Staff / Admin only)
-  // ═══════════════════════════════════════════
   const note1Id = 'cmt_int_seed_001';
-  await prisma.internalNote.upsert({
+  await prisma.ticketComment.upsert({
     where: { id: note1Id },
     update: {},
     create: {
@@ -404,11 +406,12 @@ async function main() {
       ticketId: ticket1.id,
       authorId: staff1.id,
       content: 'VPN gateway shows session timeout set to 30min by default. Escalating to network team to increase to 8h.',
+      isInternal: true,
     },
   });
 
   const note2Id = 'cmt_int_seed_002';
-  await prisma.internalNote.upsert({
+  await prisma.ticketComment.upsert({
     where: { id: note2Id },
     update: {},
     create: {
@@ -416,11 +419,12 @@ async function main() {
       ticketId: ticket2.id,
       authorId: staff2.id,
       content: 'ERP vendor confirmed this is a known bug in v4.2. Patch ETA: next Tuesday. Monitor and follow up.',
+      isInternal: true,
     },
   });
 
   const note3Id = 'cmt_int_seed_003';
-  await prisma.internalNote.upsert({
+  await prisma.ticketComment.upsert({
     where: { id: note3Id },
     update: {},
     create: {
@@ -428,6 +432,7 @@ async function main() {
       ticketId: ticket6.id,
       authorId: staff3.id,
       content: 'Installed 2 additional APs on 3rd floor. Signal coverage verified with heat map. Closing ticket.',
+      isInternal: true,
     },
   });
 
@@ -438,8 +443,7 @@ async function main() {
   console.log('───────────────────────────────────────');
   console.log('   Users:           11 (4 Req + 1 Inactive Req + 3 Staff + 1 Inactive Staff + 1 Admin + 1 Newbie)');
   console.log('   Tickets:          6 (NEW, OPEN, IN_PROGRESS, RESOLVED, CLOSED)');
-  console.log('   Public Comments:  5');
-  console.log('   Internal Notes:   3');
+  console.log('   Comments:         8 (5 Public + 3 Internal)');
   console.log('───────────────────────────────────────');
 }
 

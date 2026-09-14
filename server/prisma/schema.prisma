@@ -40,21 +40,20 @@ enum Priority {
 // ─────────────────────────────────────────────
 
 model User {
-  id                     String    @id @default(cuid())
+  id                     String   @id @default(cuid())
   name                   String
-  email                  String    @unique
+  email                  String   @unique
   passwordHash           String
-  role                   Role      @default(REQUESTER)
-  isActive               Boolean   @default(true)
-  requiresPasswordChange Boolean   @default(true)
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
+  role                   Role     @default(REQUESTER)
+  isActive               Boolean  @default(true)
+  requiresPasswordChange Boolean  @default(true)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
 
   // Relations
-  ticketsRequested       Ticket[]         @relation("TicketRequester")
-  ticketsOwned           Ticket[]         @relation("TicketOwner")
-  publicComments         PublicComment[]
-  internalNotes          InternalNote[]
+  ticketsRequested Ticket[]        @relation("TicketRequester")
+  ticketsOwned     Ticket[]        @relation("TicketOwner")
+  ticketComments   TicketComment[]
 }
 
 // ─────────────────────────────────────────────
@@ -95,33 +94,33 @@ model RelatedSystem {
 // ─────────────────────────────────────────────
 
 model Ticket {
-  id                String         @id @default(uuid())
-  ticketNumber      String         @unique
+  id                String        @id @default(uuid())
+  ticketNumber      String        @unique
   categoryId        String
-  category          Category       @relation(fields: [categoryId], references: [id])
+  category          Category      @relation(fields: [categoryId], references: [id])
   relatedSystemId   String
-  relatedSystem     RelatedSystem  @relation(fields: [relatedSystemId], references: [id])
-  requestedPriority Priority       @default(MEDIUM)
+  relatedSystem     RelatedSystem @relation(fields: [relatedSystemId], references: [id])
+  requestedPriority Priority      @default(MEDIUM)
   itPriority        Priority?
-  status            TicketStatus   @default(NEW)
-  summary           String         @db.VarChar(100)
-  description       String         @db.VarChar(1000)
+  status            TicketStatus  @default(NEW)
+  summary           String        @db.VarChar(100)
+  description       String        @db.VarChar(1000)
+  appearsResolved   Boolean       @default(false)
 
   // New Lab 3 relations (User-based)
-  requesterId       String?
-  requester         User?          @relation("TicketRequester", fields: [requesterId], references: [id])
-  ownerId           String?
-  owner             User?          @relation("TicketOwner", fields: [ownerId], references: [id])
+  requesterId String?
+  requester   User?   @relation("TicketRequester", fields: [requesterId], references: [id])
+  ownerId     String?
+  owner       User?   @relation("TicketOwner", fields: [ownerId], references: [id])
 
   // Legacy relation (kept for backward-compatible migration)
   legacyRequesterId String?
-  legacyRequester   Requester?     @relation("LegacyRequester", fields: [legacyRequesterId], references: [id])
+  legacyRequester   Requester? @relation("LegacyRequester", fields: [legacyRequesterId], references: [id])
 
-  attachments       Attachment[]
-  publicComments    PublicComment[]
-  internalNotes     InternalNote[]
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  attachments Attachment[]
+  comments    TicketComment[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 
   @@index([requesterId])
   @@index([ownerId])
@@ -147,33 +146,18 @@ model Attachment {
 }
 
 // ─────────────────────────────────────────────
-// PublicComment (Lab 3: visible to everyone)
+// TicketComment (Merged PublicComment and InternalNote)
 // ─────────────────────────────────────────────
 
-model PublicComment {
-  id        String   @id @default(cuid())
-  ticketId  String
-  ticket    Ticket   @relation(fields: [ticketId], references: [id])
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id])
-  content   String
-  createdAt DateTime @default(now())
-
-  @@index([ticketId])
-}
-
-// ─────────────────────────────────────────────
-// InternalNote (Lab 3: visible to IT_STAFF & ADMINISTRATOR only)
-// ─────────────────────────────────────────────
-
-model InternalNote {
-  id        String   @id @default(cuid())
-  ticketId  String
-  ticket    Ticket   @relation(fields: [ticketId], references: [id])
-  authorId  String
-  author    User     @relation(fields: [authorId], references: [id])
-  content   String
-  createdAt DateTime @default(now())
+model TicketComment {
+  id         String   @id @default(cuid())
+  ticketId   String
+  ticket     Ticket   @relation(fields: [ticketId], references: [id])
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id])
+  content    String
+  isInternal Boolean  @default(false)
+  createdAt  DateTime @default(now())
 
   @@index([ticketId])
 }

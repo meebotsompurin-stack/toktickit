@@ -18,8 +18,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     const user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user) {
-      // AC-02: Do not reveal if email or password is wrong
+    if (!user || !user.isActive) {
+      // AC-02: Do not reveal if email or password is wrong or account inactive
       res.status(401).json({ error: 'Unauthorized', message: 'Invalid credentials' });
       return;
     }
@@ -28,11 +28,6 @@ export const login = async (req: Request, res: Response): Promise<void> => {
 
     if (!isPasswordValid) {
       res.status(401).json({ error: 'Unauthorized', message: 'Invalid credentials' });
-      return;
-    }
-
-    if (!user.isActive) {
-      res.status(403).json({ error: 'Forbidden', message: 'Account is deactivated' });
       return;
     }
 
