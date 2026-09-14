@@ -1,3 +1,4 @@
+/// <reference types="@testing-library/jest-dom" />
 // @vitest-environment jsdom
 import { render, screen, waitFor } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
@@ -5,6 +6,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 expect.extend(matchers);
 import App from './App';
+
+vi.mock('./contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: { id: 'test-user', name: 'Test User' },
+    logout: vi.fn(),
+  }),
+}));
 
 describe('App Category List UI', () => {
   beforeEach(() => {
@@ -23,9 +31,17 @@ describe('App Category List UI', () => {
       { id: 4, name: 'Network' },
     ];
 
-    (globalThis.fetch as any).mockResolvedValue({
-      ok: true,
-      json: async () => mockCategories,
+    (globalThis.fetch as any).mockImplementation((url: string) => {
+      if (url.includes('/api/tickets')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ data: [], meta: { page: 1, limit: 10, total: 0, totalPages: 1 } }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        json: async () => mockCategories,
+      });
     });
 
     render(<App />);

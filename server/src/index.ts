@@ -11,6 +11,7 @@ import attachmentRoutes from './routes/attachment.routes';
 import requesterRoutes from './requesters/requester.routes';
 import categoryRoutes from './categories/category.routes';
 import relatedSystemRoutes from './related-systems/related-system.routes';
+import authRoutes from './routes/auth.routes';
 import { errorMiddleware } from './middlewares/error.middleware';
 
 const app = express();
@@ -33,6 +34,7 @@ app.get('/api/health', (req, res) => {
 // ----------------------------------------------------
 // API Routes
 // ----------------------------------------------------
+app.use('/api/auth', authRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/attachments', attachmentRoutes);
 app.use('/api/requesters', requesterRoutes);
