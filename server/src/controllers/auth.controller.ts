@@ -96,6 +96,13 @@ export const changePassword = async (req: Request, res: Response): Promise<void>
       return;
     }
 
+    // Check if new password is the same as the old one
+    const isSameAsOld = await bcrypt.compare(newPassword, dbUser.passwordHash);
+    if (isSameAsOld) {
+      res.status(400).json({ error: 'Bad Request', message: 'New password cannot be the same as the current password.' });
+      return;
+    }
+
     // Hash new password
     const hashedNewPassword = await bcrypt.hash(newPassword, SALT_ROUNDS);
 

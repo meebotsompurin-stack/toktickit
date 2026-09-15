@@ -24,6 +24,8 @@ app.use(express.json());
 
 
 
+import userRoutes from './routes/user.routes';
+
 // ----------------------------------------------------
 // Public / Unprotected Routes (ถ้ามีในอนาคต)
 // ----------------------------------------------------
@@ -35,6 +37,7 @@ app.get('/api/health', (req, res) => {
 // API Routes
 // ----------------------------------------------------
 app.use('/api/auth', authRoutes);
+app.use('/api/admin/users', userRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/attachments', attachmentRoutes);
 app.use('/api/requesters', requesterRoutes);
