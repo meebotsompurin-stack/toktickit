@@ -9,8 +9,16 @@ export const ChangePasswordPage: React.FC = () => {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  const { fetchMe } = useAuth();
+  const { fetchMe, user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const handleCancel = () => {
+    if (user?.requiresPasswordChange) {
+      logout();
+    } else {
+      navigate(-1);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,7 +70,9 @@ export const ChangePasswordPage: React.FC = () => {
         <div className="mb-6">
           <h2 className="text-2xl font-black text-zenPrimary tracking-tight">Change Password</h2>
           <p className="text-sm text-gray-500 mt-2 leading-relaxed">
-            For security reasons, you must change your initial password before accessing TokTickIT.
+            {user?.requiresPasswordChange 
+              ? 'For security reasons, you must change your initial password before accessing TokTickIT.' 
+              : 'Update your account password below.'}
           </p>
         </div>
 
@@ -106,13 +116,22 @@ export const ChangePasswordPage: React.FC = () => {
               placeholder="Re-enter new password"
             />
           </div>
-          <button 
-            type="submit" 
-            disabled={isSubmitting}
-            className="w-full bg-zenPrimary text-white font-semibold py-2 px-4 rounded hover:bg-zenSecondary transition-colors disabled:opacity-70 mt-2"
-          >
-            {isSubmitting ? 'Saving...' : 'Update Password'}
-          </button>
+          <div className="flex space-x-3 pt-2">
+            <button 
+              type="button" 
+              onClick={handleCancel}
+              className="w-1/2 bg-gray-200 text-gray-700 font-semibold py-2 px-4 rounded hover:bg-gray-300 transition-colors"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit" 
+              disabled={isSubmitting}
+              className="w-1/2 bg-zenPrimary text-white font-semibold py-2 px-4 rounded hover:bg-zenSecondary transition-colors disabled:opacity-70"
+            >
+              {isSubmitting ? 'Saving...' : 'Update'}
+            </button>
+          </div>
         </form>
       </div>
     </div>

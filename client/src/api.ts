@@ -15,6 +15,32 @@ export const getRequesterHeaders = (): HeadersInit => {
   };
 };
 
+export const apiFetch = async (url: string, options: RequestInit = {}) => {
+  const token = localStorage.getItem('toktickit_token');
+  const headers = {
+    ...options.headers,
+    'Content-Type': 'application/json',
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+  };
+
+  const response = await fetch(url, { ...options, headers });
+  if (!response.ok) {
+    let msg = `HTTP error! Status: ${response.status}`;
+    try {
+      const eData = await response.json();
+      msg = eData.message || eData.error || msg;
+      
+      // Global interceptor for password change requirement
+      if (response.status === 403 && msg === 'Password change required') {
+        window.location.href = '/change-password';
+        return;
+      }
+    } catch {}
+    throw new Error(msg);
+  }
+  return response.json();
+};
+
 // Helper สำหรับ FormData เนื่องจากไม่ควรเซ็ต Content-Type เอง
 export const getFormDataHeaders = (): HeadersInit => {
   const requesterStr = localStorage.getItem('toktickit_requester');

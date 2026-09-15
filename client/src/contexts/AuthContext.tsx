@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export interface User {
   id: string;
@@ -61,6 +61,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     fetchMe();
   }, []);
+
+  const location = useLocation();
+  
+  useEffect(() => {
+    if (user?.requiresPasswordChange && location.pathname !== '/change-password') {
+      navigate('/change-password', { replace: true });
+    }
+  }, [user, navigate, location.pathname]);
 
   const login = (token: string, userData: User) => {
     localStorage.setItem('toktickit_token', token);

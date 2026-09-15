@@ -39,7 +39,12 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       return;
     }
 
-    if (user.requiresPasswordChange && req.path !== '/change-password' && req.path !== '/logout') {
+    if (
+      user.requiresPasswordChange && 
+      !req.originalUrl.includes('/change-password') && 
+      !req.originalUrl.includes('/logout') && 
+      !req.originalUrl.includes('/me')
+    ) {
       res.status(403).json({ error: 'Forbidden', message: 'Password change required' });
       return;
     }
