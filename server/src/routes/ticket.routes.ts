@@ -1,27 +1,43 @@
 import { Router } from 'express';
-import { authMiddleware } from '../middlewares/auth.middleware';
-import { createTicketHandler, getTicketsHandler, getTicketByIdHandler } from '../controllers/ticket.controller';
+import { authenticate } from '../middlewares/auth.middleware';
+import { 
+  createTicketHandler, 
+  getTicketsHandler, 
+  getTicketByIdHandler,
+  addPublicCommentHandler,
+  addInternalNoteHandler,
+  getInternalNotesHandler,
+  toggleAppearsResolvedHandler
+} from '../controllers/ticket.controller';
 import { uploadHandler, downloadAttachmentHandler } from '../controllers/attachment.controller';
 import { uploadSingle } from '../middlewares/upload.middleware';
 
 const router = Router();
 
-// บังคับให้ต้องมี X-Requester-Id
-router.use(authMiddleware);
+// Use real JWT session auth
+router.use(authenticate);
 
-// GET /api/tickets - ดึงรายการตั๋ว
+// GET /api/tickets
 router.get('/', getTicketsHandler);
 
-// GET /api/tickets/:ticketId - ดึงรายละเอียดตั๋ว
+// GET /api/tickets/:ticketId
 router.get('/:ticketId', getTicketByIdHandler);
 
-// POST /api/tickets - สร้างตั๋วใหม่
+// POST /api/tickets
 router.post('/', createTicketHandler);
 
-// POST /api/tickets/:ticketId/attachments - แนบไฟล์
+// POST /api/tickets/:ticketId/attachments
 router.post('/:ticketId/attachments', uploadSingle, uploadHandler);
 
-// GET /api/tickets/:ticketId/attachments/:attachmentId/download - ดาวน์โหลดไฟล์แนบ
+// GET /api/tickets/:ticketId/attachments/:attachmentId/download
 router.get('/:ticketId/attachments/:attachmentId/download', downloadAttachmentHandler);
+
+// Comments & Notes
+router.post('/:ticketId/comments', addPublicCommentHandler);
+router.post('/:ticketId/notes', addInternalNoteHandler);
+router.get('/:ticketId/notes', getInternalNotesHandler);
+
+// Toggle Appears Resolved
+router.patch('/:ticketId/resolved-status', toggleAppearsResolvedHandler);
 
 export default router;

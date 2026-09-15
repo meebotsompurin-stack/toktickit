@@ -1,11 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { getTicketById, deleteAttachment, uploadAttachmentToTicket, downloadAttachment } from '../api';
+import { getTicketById, deleteAttachment, uploadAttachmentToTicket, downloadAttachment, addPublicComment, toggleAppearsResolved } from '../api';
 
 interface Attachment {
   id: string;
   filename: string;
   mimetype: string;
   size: number;
+}
+
+
+interface Comment {
+  id: string;
+  content: string;
+  isInternal: boolean;
+  createdAt: string;
+  author: { name: string; role: string };
 }
 
 interface Ticket {
@@ -17,10 +26,13 @@ interface Ticket {
   summary: string;
   description: string;
   createdAt: string;
+  appearsResolved: boolean;
   category?: { name: string };
   relatedSystem?: { name: string };
   attachments?: Attachment[];
+  comments?: Comment[];
 }
+
 
 interface Props {
   ticketId: string;
@@ -36,7 +48,50 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
   const [downloadLoading, setDownloadLoading] = useState<string | null>(null);
+
+  const [newComment, setNewComment] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [commentError, setCommentError] = useState<string | null>(null);
+  const [isTogglingResolved, setIsTogglingResolved] = useState(false);
+
+  const handleToggleResolved = async () => {
+    if (!ticket) return;
+    setIsTogglingResolved(true);
+    try {
+      const updatedTicket = await toggleAppearsResolved(ticket.id, !ticket.appearsResolved);
+      setTicket({ ...ticket, appearsResolved: updatedTicket.appearsResolved });
+    } catch (err: any) {
+      alert(err.message || 'Failed to toggle status');
+    } finally {
+      setIsTogglingResolved(false);
+    }
+  };
+
+  const handleAddComment = async () => {
+    if (!newComment.trim()) {
+      setCommentError('Comment content cannot be empty');
+      return;
+    }
+    setIsSubmittingComment(true);
+    setCommentError(null);
+    try {
+      const created = await addPublicComment(ticketId, newComment);
+      if (ticket) {
+        setTicket({
+          ...ticket,
+          comments: [...(ticket.comments || []), created]
+        });
+      }
+      setNewComment('');
+    } catch (err: any) {
+      setCommentError(err.message || 'Failed to add comment');
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+
 
   const fetchTicket = async () => {
     try {
@@ -177,12 +232,25 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
         Back to My Tickets
       </button>
 
+      
       <div className="flex justify-between items-end mb-6 border-b pb-4 border-zenPrimary">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">{ticket.ticketNumber}</h2>
           <p className="text-sm text-gray-500 mt-1">Created on {new Date(ticket.createdAt).toLocaleString()}</p>
         </div>
+        <div>
+          <button
+            onClick={handleToggleResolved}
+            disabled={isTogglingResolved}
+            className={`px-4 py-2 text-sm font-semibold rounded shadow-sm transition-colors ${
+              ticket.appearsResolved ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+            } disabled:opacity-50`}
+          >
+            {ticket.appearsResolved ? '✅ Appears Resolved' : 'Mark as Resolved'}
+          </button>
+        </div>
       </div>
+
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
