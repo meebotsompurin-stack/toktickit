@@ -28,6 +28,56 @@ export const getAllUsers = async (req: Request, res: Response): Promise<void> =>
   }
 };
 
+export const createUser = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { name, email, role, password } = req.body;
+    
+    if (!name || !email || !role || !password) {
+      res.status(400).json({ error: 'Bad Request', message: 'Name, email, role, and password are required' });
+      return;
+    }
+
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [{ email }, { name }]
+      }
+    });
+
+    if (existingUser) {
+      res.status(409).json({ error: 'Conflict', message: 'User with this email or name already exists' });
+      return;
+    }
+
+    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+        role: role as Role,
+        passwordHash,
+        isActive: true,
+        requiresPasswordChange: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        isActive: true,
+        requiresPasswordChange: true,
+        createdAt: true,
+        updatedAt: true,
+      }
+    });
+
+    res.status(201).json(newUser);
+  } catch (error) {
+    console.error('Error creating user:', error);
+    res.status(500).json({ error: 'Internal Server Error', message: 'Failed to create user' });
+  }
+};
+
 export const updateUser = async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;

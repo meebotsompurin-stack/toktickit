@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getAllUsers, updateUser, resetUserPassword } from '../controllers/user.controller';
+import { getAllUsers, updateUser, resetUserPassword, createUser } from '../controllers/user.controller';
 import { authenticate, requireRole } from '../middlewares/auth.middleware';
 import { Role } from '@prisma/client';
 
@@ -10,7 +10,8 @@ router.use(authenticate);
 router.use(requireRole([Role.ADMINISTRATOR]));
 
 router.get('/', getAllUsers);
+router.post('/', createUser);
 router.patch('/:id', updateUser);
-router.post('/:id/reset-password', resetUserPassword);
+router.patch('/:id/password', resetUserPassword);
 
 export default router;
