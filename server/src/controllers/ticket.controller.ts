@@ -119,6 +119,21 @@ export const getTicketByIdHandler = async (req: Request, res: Response, next: Ne
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
+export const getPublicCommentsHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { ticketId } = req.params;
+    const comments = await prisma.ticketComment.findMany({
+      where: { ticketId, isInternal: false },
+      orderBy: { createdAt: 'asc' },
+      include: { author: { select: { name: true, role: true } } }
+    });
+
+    res.status(200).json(comments);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const addPublicCommentHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { ticketId } = req.params;

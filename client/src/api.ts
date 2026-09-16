@@ -172,9 +172,18 @@ export const addPublicComment = async (ticketId: string, content: string) => {
   }
 };
 
+export const getTicketComments = async (ticketId: string) => {
+  try {
+    return await apiFetch(`/api/tickets/${ticketId}/comments`, { method: 'GET' });
+  } catch (error) {
+    console.error('API Error - getTicketComments:', error);
+    throw error;
+  }
+};
+
 export const toggleAppearsResolved = async (ticketId: string, appearsResolved: boolean) => {
   try {
-    return await apiFetch(`/api/tickets/${ticketId}/resolved-status`, {
+    return await apiFetch(`/api/tickets/${ticketId}/resolution-flag`, {
       method: 'PATCH',
       body: JSON.stringify({ appearsResolved }),
     });

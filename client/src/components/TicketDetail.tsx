@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getTicketById, deleteAttachment, uploadAttachmentToTicket, downloadAttachment, addPublicComment, toggleAppearsResolved } from '../api';
+import { getTicketById, deleteAttachment, uploadAttachmentToTicket, downloadAttachment, addPublicComment, getTicketComments, toggleAppearsResolved } from '../api';
 
 interface Attachment {
   id: string;
@@ -30,7 +30,6 @@ interface Ticket {
   category?: { name: string };
   relatedSystem?: { name: string };
   attachments?: Attachment[];
-  comments?: Comment[];
 }
 
 
@@ -50,6 +49,7 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   const [downloadLoading, setDownloadLoading] = useState<string | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
 
   const [newComment, setNewComment] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
@@ -78,12 +78,7 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
     setCommentError(null);
     try {
       const created = await addPublicComment(ticketId, newComment);
-      if (ticket) {
-        setTicket({
-          ...ticket,
-          comments: [...(ticket.comments || []), created]
-        });
-      }
+      setComments([...comments, created]);
       setNewComment('');
     } catch (err: any) {
       setCommentError(err.message || 'Failed to add comment');

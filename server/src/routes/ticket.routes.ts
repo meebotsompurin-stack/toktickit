@@ -4,6 +4,7 @@ import {
   createTicketHandler, 
   getTicketsHandler, 
   getTicketByIdHandler,
+  getPublicCommentsHandler,
   addPublicCommentHandler,
   addInternalNoteHandler,
   getInternalNotesHandler,
@@ -33,11 +34,12 @@ router.post('/:ticketId/attachments', uploadSingle, uploadHandler);
 router.get('/:ticketId/attachments/:attachmentId/download', downloadAttachmentHandler);
 
 // Comments & Notes
+router.get('/:ticketId/comments', getPublicCommentsHandler);
 router.post('/:ticketId/comments', addPublicCommentHandler);
 router.post('/:ticketId/notes', addInternalNoteHandler);
 router.get('/:ticketId/notes', getInternalNotesHandler);
 
 // Toggle Appears Resolved
-router.patch('/:ticketId/resolved-status', toggleAppearsResolvedHandler);
+router.patch('/:ticketId/resolution-flag', toggleAppearsResolvedHandler);
 
 export default router;

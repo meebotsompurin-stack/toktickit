@@ -128,11 +128,6 @@ export const getTicketById = async (ticketId: string) => {
       relatedSystem: true,
       attachments: {
         where: { isRemoved: false }
-      },
-      comments: {
-        where: { isInternal: false },
-        orderBy: { createdAt: 'asc' },
-        include: { author: { select: { name: true, role: true } } }
       }
     }
   });
