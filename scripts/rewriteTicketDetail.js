@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+const fs = require('fs');
+
+const content = `import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   getTicketById, deleteAttachment, uploadAttachmentToTicket, downloadAttachment, 
@@ -117,7 +119,7 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
       const updatedTicket = await updateTicket(ticketId, { [field]: value });
       setTicket(updatedTicket);
     } catch (err: any) {
-      alert(err.message || `Failed to update ${field}`);
+      alert(err.message || \`Failed to update \${field}\`);
     } finally {
       setIsUpdatingIT(false);
     }
@@ -268,9 +270,9 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
           <button
             onClick={handleToggleResolved}
             disabled={isTogglingResolved}
-            className={`px-4 py-2 text-sm font-semibold rounded shadow-sm transition-colors ${
+            className={\`px-4 py-2 text-sm font-semibold rounded shadow-sm transition-colors \${
               ticket.appearsResolved ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-            } disabled:opacity-50`}
+            } disabled:opacity-50\`}
           >
             {ticket.appearsResolved ? '✅ Appears Resolved' : 'Mark as Resolved'}
           </button>
@@ -307,11 +309,11 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
         </div>
         <div>
           <p className="text-sm text-gray-500 font-semibold mb-1">Requested Priority</p>
-          <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+          <span className={\`inline-block px-3 py-1 rounded-full text-sm font-medium \${
             ticket.requestedPriority === 'High' || ticket.requestedPriority === 'Critical' ? 'bg-red-100 text-red-800' :
             ticket.requestedPriority === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
             'bg-green-100 text-green-800'
-          }`}>
+          }\`}>
             {ticket.requestedPriority}
           </span>
         </div>
@@ -479,3 +481,6 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
     </div>
   );
 };
+`;
+
+fs.writeFileSync('client/src/components/TicketDetail.tsx', content);

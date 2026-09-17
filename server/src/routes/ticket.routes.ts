@@ -8,7 +8,8 @@ import {
   addPublicCommentHandler,
   addInternalNoteHandler,
   getInternalNotesHandler,
-  toggleAppearsResolvedHandler
+  toggleAppearsResolvedHandler,
+  updateTicketHandler
 } from '../controllers/ticket.controller';
 import { uploadHandler, downloadAttachmentHandler } from '../controllers/attachment.controller';
 import { uploadSingle } from '../middlewares/upload.middleware';
@@ -29,6 +30,9 @@ router.post('/', createTicketHandler);
 
 // POST /api/tickets/:ticketId/attachments
 router.post('/:ticketId/attachments', uploadSingle, uploadHandler);
+
+// PATCH /api/tickets/:ticketId (For claiming, updating status, itPriority)
+router.patch('/:ticketId', updateTicketHandler);
 
 // GET /api/tickets/:ticketId/attachments/:attachmentId/download
 router.get('/:ticketId/attachments/:attachmentId/download', downloadAttachmentHandler);

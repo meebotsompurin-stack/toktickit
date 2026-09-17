@@ -53,6 +53,44 @@ export const createTicketHandler = async (req: Request, res: Response, next: Nex
   }
 };
 
+export const updateTicketHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { ticketId } = req.params;
+    const { ownerId, itPriority, status } = req.body;
+
+    if (req.user!.role === 'REQUESTER') {
+      res.status(403).json({ error: 'Forbidden', message: 'Requesters cannot update IT fields' });
+      return;
+    }
+
+    const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+    if (!ticket) {
+      res.status(404).json({ error: 'Not Found', message: 'Ticket not found' });
+      return;
+    }
+
+    const dataToUpdate: any = {};
+    if (ownerId !== undefined) {
+      // If ownerId is an empty string, maybe they want to unassign it, but for now set it to string
+      dataToUpdate.ownerId = ownerId === '' ? null : ownerId;
+    }
+    if (itPriority !== undefined) dataToUpdate.itPriority = itPriority;
+    if (status !== undefined) dataToUpdate.status = status;
+
+    const updatedTicket = await prisma.ticket.update({
+      where: { id: ticketId },
+      data: dataToUpdate,
+      include: {
+        owner: { select: { name: true, email: true } }
+      }
+    });
+
+    res.status(200).json(updatedTicket);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getTicketsHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const requesterId = req.user!.id; // AC-REQ-01

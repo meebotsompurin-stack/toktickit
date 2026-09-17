@@ -192,3 +192,36 @@ export const toggleAppearsResolved = async (ticketId: string, appearsResolved: b
     throw error;
   }
 };
+
+export const updateTicket = async (ticketId: string, data: any) => {
+  try {
+    return await apiFetch(`/api/tickets/${ticketId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  } catch (error) {
+    console.error('API Error - updateTicket:', error);
+    throw error;
+  }
+};
+
+export const getTicketNotes = async (ticketId: string) => {
+  try {
+    return await apiFetch(`/api/tickets/${ticketId}/notes`, { method: 'GET' });
+  } catch (error) {
+    console.error('API Error - getTicketNotes:', error);
+    throw error;
+  }
+};
+
+export const addTicketNote = async (ticketId: string, content: string) => {
+  try {
+    return await apiFetch(`/api/tickets/${ticketId}/notes`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    });
+  } catch (error) {
+    console.error('API Error - addTicketNote:', error);
+    throw error;
+  }
+};
