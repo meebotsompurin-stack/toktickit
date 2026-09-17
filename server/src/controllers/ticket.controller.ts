@@ -3,12 +3,11 @@ import * as TicketService from '../services/ticket.service';
 
 export const createTicketHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const requesterId = req.header('X-Requester-Id') as string;
+    const requesterId = req.user!.id; // AC-REQ-01: Always use req.user.id
     const { categoryId, relatedSystemId, requestedPriority, summary, description } = req.body;
 
     const details: { field: string; message: string }[] = [];
 
-    // Manual Validation
     if (!categoryId) details.push({ field: 'categoryId', message: 'Category is required' });
     if (!relatedSystemId) details.push({ field: 'relatedSystemId', message: 'Related System is required' });
     
@@ -30,7 +29,6 @@ export const createTicketHandler = async (req: Request, res: Response, next: Nex
       details.push({ field: 'description', message: 'Description must not exceed 1000 characters' });
     }
 
-    // หากมี Error จากการ Validate
     if (details.length > 0) {
       throw {
         statusCode: 400,
@@ -51,13 +49,13 @@ export const createTicketHandler = async (req: Request, res: Response, next: Nex
 
     res.status(201).json(ticket);
   } catch (error) {
-    next(error); // โยนให้ Global Error Handler
+    next(error);
   }
 };
 
 export const getTicketsHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const requesterId = req.header('X-Requester-Id') as string;
+    const requesterId = req.user!.id; // AC-REQ-01
     
     const search = req.query.search as string | undefined;
     const categoryId = req.query.categoryId as string | undefined;
@@ -66,7 +64,6 @@ export const getTicketsHandler = async (req: Request, res: Response, next: NextF
     const sortBy = req.query.sortBy as string | undefined;
     const sortOrder = req.query.sortOrder as 'asc' | 'desc' | undefined;
     
-    // Pagination defaults: page=1, limit=10 (max 50)
     let page = parseInt(req.query.page as string, 10);
     if (isNaN(page) || page < 1) page = 1;
     
@@ -74,7 +71,10 @@ export const getTicketsHandler = async (req: Request, res: Response, next: NextF
     if (isNaN(limit) || limit < 1) limit = 10;
     if (limit > 50) limit = 50;
 
-    const result = await TicketService.getTickets(requesterId, {
+    // Only enforce requesterId filter if the user is a REQUESTER. IT_STAFF and ADMIN see all tickets.
+    const queryRequesterId = req.user!.role === 'REQUESTER' ? requesterId : undefined;
+
+    const result = await TicketService.getTickets(queryRequesterId, {
       search,
       categoryId,
       priority,
@@ -93,21 +93,146 @@ export const getTicketsHandler = async (req: Request, res: Response, next: NextF
 
 export const getTicketByIdHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const requesterId = req.header('X-Requester-Id') as string;
+    const user = req.user!;
     const { ticketId } = req.params;
 
     const ticket = await TicketService.getTicketById(ticketId);
 
-    if (!ticket) {
-      throw { statusCode: 404, error: 'Not Found', message: 'Ticket not found' };
-    }
-
-    // Check ownership if required (Optional based on business rules, but good practice)
-    if (ticket.requesterId !== requesterId) {
-      throw { statusCode: 403, error: 'Forbidden', message: 'You do not have permission to view this ticket' };
+    // AC-REQ-02: Check ownership for REQUESTER without leaking existence
+    if (user.role === 'REQUESTER') {
+      if (!ticket || ticket.requesterId !== user.id) {
+        throw { statusCode: 403, error: 'Forbidden', message: 'You do not have permission to view this ticket' };
+      }
+    } else {
+      // IT_STAFF and ADMIN just get 404 if it doesn't exist
+      if (!ticket) {
+        throw { statusCode: 404, error: 'Not Found', message: 'Ticket not found' };
+      }
     }
 
     res.status(200).json(ticket);
+  } catch (error) {
+    next(error);
+  }
+};
+
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
+
+export const getPublicCommentsHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { ticketId } = req.params;
+    const comments = await prisma.ticketComment.findMany({
+      where: { ticketId, isInternal: false },
+      orderBy: { createdAt: 'asc' },
+      include: { author: { select: { name: true, role: true } } }
+    });
+
+    res.status(200).json(comments);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const addPublicCommentHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { ticketId } = req.params;
+    const { content } = req.body;
+
+    if (!content || content.trim() === '') {
+      res.status(422).json({ error: 'Unprocessable Entity', message: 'Comment content cannot be empty' });
+      return;
+    }
+
+    const comment = await prisma.ticketComment.create({
+      data: {
+        ticketId,
+        authorId: req.user!.id,
+        content: content.trim(),
+        isInternal: false
+      },
+      include: { author: { select: { name: true, role: true } } }
+    });
+
+    res.status(201).json(comment);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const addInternalNoteHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (req.user!.role === 'REQUESTER') {
+      res.status(403).json({ error: 'Forbidden', message: 'Requesters cannot add internal notes' });
+      return;
+    }
+
+    const { ticketId } = req.params;
+    const { content } = req.body;
+
+    if (!content || content.trim() === '') {
+      res.status(422).json({ error: 'Unprocessable Entity', message: 'Note content cannot be empty' });
+      return;
+    }
+
+    const note = await prisma.ticketComment.create({
+      data: {
+        ticketId,
+        authorId: req.user!.id,
+        content: content.trim(),
+        isInternal: true
+      },
+      include: { author: { select: { name: true, role: true } } }
+    });
+
+    res.status(201).json(note);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getInternalNotesHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    if (req.user!.role === 'REQUESTER') {
+      res.status(403).json({ error: 'Forbidden', message: 'Requesters cannot view internal notes' });
+      return;
+    }
+
+    const { ticketId } = req.params;
+    const notes = await prisma.ticketComment.findMany({
+      where: { ticketId, isInternal: true },
+      orderBy: { createdAt: 'asc' },
+      include: { author: { select: { name: true, role: true } } }
+    });
+
+    res.status(200).json(notes);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const toggleAppearsResolvedHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { ticketId } = req.params;
+    const { appearsResolved } = req.body;
+
+    const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+    if (!ticket) {
+      res.status(404).json({ error: 'Not Found', message: 'Ticket not found' });
+      return;
+    }
+
+    if (req.user!.role === 'REQUESTER' && ticket.requesterId !== req.user!.id) {
+      res.status(403).json({ error: 'Forbidden', message: 'You do not own this ticket' });
+      return;
+    }
+
+    const updatedTicket = await prisma.ticket.update({
+      where: { id: ticketId },
+      data: { appearsResolved: Boolean(appearsResolved) }
+    });
+
+    res.status(200).json(updatedTicket);
   } catch (error) {
     next(error);
   }
