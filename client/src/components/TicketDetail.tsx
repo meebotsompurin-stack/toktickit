@@ -121,6 +121,7 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
       const updatedTicket = await updateStaffTicketStatus(ticketId, status);
       setTicket(updatedTicket);
     } catch (err: any) {
+      console.error('Failed to update ticket status', err);
       alert(err.message || 'Failed to update status');
     } finally {
       setIsUpdatingIT(false);
@@ -134,6 +135,7 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
       const updatedTicket = await updateStaffTicketPriority(ticketId, priority);
       setTicket(updatedTicket);
     } catch (err: any) {
+      console.error('Failed to update ticket priority', err);
       alert(err.message || 'Failed to update priority');
     } finally {
       setIsUpdatingIT(false);
@@ -147,6 +149,7 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
       const updatedTicket = await updateStaffTicketOwner(ticketId);
       setTicket(updatedTicket);
     } catch (err: any) {
+      console.error('Failed to claim ticket', err);
       alert(err.message || 'Failed to claim ticket');
     } finally {
       setIsUpdatingIT(false);

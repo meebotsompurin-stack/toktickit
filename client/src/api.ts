@@ -154,6 +154,7 @@ export const downloadAttachment = async (ticketId: string, attachmentId: string,
     a.click();
     a.remove();
     window.URL.revokeObjectURL(url);
+    return blob;
   } catch (error) {
     console.error('API Error - downloadAttachment:', error);
     throw error;
@@ -204,11 +205,11 @@ export const updateStaffTicketOwner = async (ticketId: string) => {
   }
 };
 
-export const updateStaffTicketPriority = async (ticketId: string, itPriority: string) => {
+export const updateStaffTicketPriority = async (ticketId: string, priority: string) => {
   try {
     return await apiFetch(`/api/staff/tickets/${ticketId}/priority`, {
       method: 'PATCH',
-      body: JSON.stringify({ itPriority }),
+      body: JSON.stringify({ itPriority: priority }),
     });
   } catch (error) {
     console.error('API Error - updateStaffTicketPriority:', error);
@@ -247,11 +248,11 @@ export const getTicketNotes = async (ticketId: string) => {
   }
 };
 
-export const addTicketNote = async (ticketId: string, content: string) => {
+export const addTicketNote = async (ticketId: string, note: string) => {
   try {
     return await apiFetch(`/api/tickets/${ticketId}/notes`, {
       method: 'POST',
-      body: JSON.stringify({ content }),
+      body: JSON.stringify({ content: note }),
     });
   } catch (error) {
     console.error('API Error - addTicketNote:', error);
