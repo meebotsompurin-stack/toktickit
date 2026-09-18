@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import request from 'supertest';
 import express from 'express';
-import ticketRoutes from '../routes/ticket.routes';
+import staffRoutes from '../routes/staff.routes';
 import { PrismaClient } from '@prisma/client';
 
 vi.mock('@prisma/client', () => {
@@ -27,15 +27,21 @@ app.use((req: any, res: any, next: any) => {
 
 vi.mock('../middlewares/auth.middleware', () => ({
   authenticate: (req: any, res: any, next: any) => next(),
+  requireRole: (roles: any[]) => (req: any, res: any, next: any) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ message: 'Insufficient permissions' });
+    }
+    next();
+  }
 }));
 
-app.use('/api/tickets', ticketRoutes);
+app.use('/api/staff', staffRoutes);
 
 app.use((err: any, req: any, res: any, next: any) => {
   res.status(err.statusCode || 500).json({ error: err.error, message: err.message });
 });
 
-describe('Ticket Updates API', () => {
+describe('Staff Ticket Updates API', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -45,9 +51,9 @@ describe('Ticket Updates API', () => {
     prisma.ticket.update.mockResolvedValue({ id: 't1', ownerId: 'staff123' });
 
     const res = await request(app)
-      .patch('/api/tickets/t1')
+      .patch('/api/staff/tickets/t1/claim')
       .set('x-mock-role', 'IT_STAFF')
-      .send({ ownerId: 'staff123' });
+      .send();
 
     expect(res.status).toBe(200);
     expect(prisma.ticket.update).toHaveBeenCalledWith(expect.objectContaining({
@@ -56,30 +62,45 @@ describe('Ticket Updates API', () => {
     }));
   });
 
-  it('should allow IT_STAFF to update itPriority and status', async () => {
+  it('should allow IT_STAFF to update itPriority', async () => {
     prisma.ticket.findUnique.mockResolvedValue({ id: 't1' });
-    prisma.ticket.update.mockResolvedValue({ id: 't1', itPriority: 'HIGH', status: 'IN_PROGRESS' });
+    prisma.ticket.update.mockResolvedValue({ id: 't1', itPriority: 'HIGH' });
 
     const res = await request(app)
-      .patch('/api/tickets/t1')
+      .patch('/api/staff/tickets/t1/priority')
       .set('x-mock-role', 'IT_STAFF')
-      .send({ itPriority: 'HIGH', status: 'IN_PROGRESS' });
+      .send({ itPriority: 'HIGH' });
 
     expect(res.status).toBe(200);
     expect(prisma.ticket.update).toHaveBeenCalledWith(expect.objectContaining({
       where: { id: 't1' },
-      data: expect.objectContaining({ itPriority: 'HIGH', status: 'IN_PROGRESS' })
+      data: expect.objectContaining({ itPriority: 'HIGH' })
+    }));
+  });
+
+  it('should allow IT_STAFF to update status', async () => {
+    prisma.ticket.findUnique.mockResolvedValue({ id: 't1' });
+    prisma.ticket.update.mockResolvedValue({ id: 't1', status: 'IN_PROGRESS' });
+
+    const res = await request(app)
+      .patch('/api/staff/tickets/t1/status')
+      .set('x-mock-role', 'IT_STAFF')
+      .send({ status: 'IN_PROGRESS' });
+
+    expect(res.status).toBe(200);
+    expect(prisma.ticket.update).toHaveBeenCalledWith(expect.objectContaining({
+      where: { id: 't1' },
+      data: expect.objectContaining({ status: 'IN_PROGRESS' })
     }));
   });
 
   it('should block REQUESTER from updating IT fields', async () => {
     const res = await request(app)
-      .patch('/api/tickets/t1')
+      .patch('/api/staff/tickets/t1/status')
       .set('x-mock-role', 'REQUESTER')
-      .send({ itPriority: 'HIGH', status: 'IN_PROGRESS' });
+      .send({ status: 'IN_PROGRESS' });
 
     expect(res.status).toBe(403);
-    expect(res.body.message).toMatch(/cannot update IT fields/i);
     expect(prisma.ticket.update).not.toHaveBeenCalled();
   });
 
@@ -87,7 +108,7 @@ describe('Ticket Updates API', () => {
     prisma.ticket.findUnique.mockResolvedValue(null);
 
     const res = await request(app)
-      .patch('/api/tickets/t999')
+      .patch('/api/staff/tickets/t999/status')
       .set('x-mock-role', 'IT_STAFF')
       .send({ status: 'RESOLVED' });
 

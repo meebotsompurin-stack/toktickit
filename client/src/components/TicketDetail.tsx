@@ -3,7 +3,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { 
   getTicketById, deleteAttachment, uploadAttachmentToTicket, downloadAttachment, 
   addPublicComment, getTicketComments, toggleAppearsResolved,
-  updateTicket, getTicketNotes, addTicketNote
+  getTicketNotes, addTicketNote,
+  claimTicket, updateTicketPriority, updateTicketStatus
 } from '../api';
 
 interface Attachment {
@@ -75,6 +76,9 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
   const [isTogglingResolved, setIsTogglingResolved] = useState(false);
   const [isUpdatingIT, setIsUpdatingIT] = useState(false);
 
+  // Tab State: 'public' | 'internal'
+  const [activeTab, setActiveTab] = useState<'public' | 'internal'>('public');
+
   const fetchTicket = async () => {
     try {
       const data = await getTicketById(ticketId);
@@ -110,22 +114,43 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
     }
   };
 
-  const handleUpdateITField = async (field: string, value: any) => {
+  const handleUpdateStatus = async (status: string) => {
     if (!ticket) return;
     setIsUpdatingIT(true);
     try {
-      const updatedTicket = await updateTicket(ticketId, { [field]: value });
+      const updatedTicket = await updateTicketStatus(ticketId, status);
       setTicket(updatedTicket);
     } catch (err: any) {
-      alert(err.message || `Failed to update ${field}`);
+      alert(err.message || 'Failed to update status');
     } finally {
       setIsUpdatingIT(false);
     }
   };
 
-  const handleClaim = () => {
-    if (!user) return;
-    handleUpdateITField('ownerId', user.id);
+  const handleUpdatePriority = async (priority: string) => {
+    if (!ticket) return;
+    setIsUpdatingIT(true);
+    try {
+      const updatedTicket = await updateTicketPriority(ticketId, priority);
+      setTicket(updatedTicket);
+    } catch (err: any) {
+      alert(err.message || 'Failed to update priority');
+    } finally {
+      setIsUpdatingIT(false);
+    }
+  };
+
+  const handleClaim = async () => {
+    if (!user || !ticket) return;
+    setIsUpdatingIT(true);
+    try {
+      const updatedTicket = await claimTicket(ticketId);
+      setTicket(updatedTicket);
+    } catch (err: any) {
+      alert(err.message || 'Failed to claim ticket');
+    } finally {
+      setIsUpdatingIT(false);
+    }
   };
 
   const handleAddComment = async () => {
@@ -256,7 +281,7 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
         className="mb-6 flex items-center text-sm font-medium text-gray-500 hover:text-zenPrimary transition-colors"
       >
         <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-        Back to My Tickets
+        Back to List
       </button>
 
       <div className="flex justify-between items-start mb-6 border-b pb-4 border-zenPrimary">
@@ -293,7 +318,7 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
           {isStaffOrAdmin ? (
             <select
               value={ticket.status}
-              onChange={(e) => handleUpdateITField('status', e.target.value)}
+              onChange={(e) => handleUpdateStatus(e.target.value)}
               disabled={isUpdatingIT}
               className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-zenPrimary focus:border-zenPrimary sm:text-sm rounded-md"
             >
@@ -330,7 +355,7 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
               <p className="text-sm text-gray-500 font-semibold mb-1">IT Priority</p>
               <select
                 value={ticket.itPriority || ''}
-                onChange={(e) => handleUpdateITField('itPriority', e.target.value)}
+                onChange={(e) => handleUpdatePriority(e.target.value)}
                 disabled={isUpdatingIT}
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-zenPrimary focus:border-zenPrimary sm:text-sm rounded-md"
               >
@@ -358,7 +383,7 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
         </div>
       </div>
 
-      <div className="border-t border-gray-200 pt-6">
+      <div className="border-t border-gray-200 pt-6 mb-8">
         <h4 className="text-lg font-bold text-gray-800 mb-4">Attachments</h4>
         {(!ticket.attachments || ticket.attachments.length === 0) ? (
           <p className="text-gray-500 italic">No attachments</p>
@@ -388,7 +413,6 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
           </ul>
         )}
 
-        {/* Upload Attachment */}
         <div className="mt-6 pt-6 border-t border-gray-100">
           <h5 className="text-sm font-bold text-gray-700 mb-3">Add Attachment</h5>
           {uploadError && <div className="mb-3 p-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded">{uploadError}</div>}
@@ -401,48 +425,64 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8 border-t border-gray-200 pt-6">
+      <div className="border-t border-gray-200 pt-6">
+        {isStaffOrAdmin ? (
+          <div className="flex border-b border-gray-200 mb-6">
+            <button 
+              className={`px-6 py-3 font-semibold text-sm ${activeTab === 'public' ? 'border-b-2 border-zenPrimary text-zenPrimary' : 'text-gray-500 hover:text-gray-700'}`}
+              onClick={() => setActiveTab('public')}
+            >
+              Public Comments
+            </button>
+            <button 
+              className={`px-6 py-3 font-semibold text-sm flex items-center ${activeTab === 'internal' ? 'border-b-2 border-yellow-600 text-yellow-700' : 'text-gray-500 hover:text-gray-700'}`}
+              onClick={() => setActiveTab('internal')}
+            >
+              <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+              Internal Notes
+            </button>
+          </div>
+        ) : (
+          <h4 className="text-lg font-bold text-gray-800 mb-4">Comments</h4>
+        )}
         
-        {/* Public Comments Section */}
-        <div>
-          <h4 className="text-lg font-bold text-gray-800 mb-4">Public Comments</h4>
-          {(!comments || comments.length === 0) ? (
-            <p className="text-gray-500 italic mb-6">No comments yet</p>
-          ) : (
-            <ul className="space-y-4 mb-6">
-              {comments.map((comment) => (
-                <li key={comment.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                  <div className="flex justify-between items-center mb-2">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-bold text-gray-800">{comment.author.name}</span>
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded bg-gray-200 text-gray-700">{comment.author.role}</span>
+        {/* Public Comments Tab */}
+        {activeTab === 'public' && (
+          <div>
+            {(!comments || comments.length === 0) ? (
+              <p className="text-gray-500 italic mb-6">No comments yet</p>
+            ) : (
+              <ul className="space-y-4 mb-6">
+                {comments.map((comment) => (
+                  <li key={comment.id} className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-gray-800">{comment.author.name}</span>
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded bg-gray-200 text-gray-700">{comment.author.role}</span>
+                      </div>
+                      <span className="text-xs text-gray-500">{new Date(comment.createdAt).toLocaleString()}</span>
                     </div>
-                    <span className="text-xs text-gray-500">{new Date(comment.createdAt).toLocaleString()}</span>
-                  </div>
-                  <p className="text-gray-700 whitespace-pre-wrap">{comment.content}</p>
-                </li>
-              ))}
-            </ul>
-          )}
-          <div className="bg-white border border-gray-200 p-4 rounded-lg">
-            <h5 className="text-sm font-bold text-gray-700 mb-2">Add a Comment</h5>
-            {commentError && <div className="mb-3 p-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded">{commentError}</div>}
-            <textarea value={newComment} onChange={(e) => { setNewComment(e.target.value); setCommentError(null); }} placeholder="Type your comment here..." className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zenPrimary/50 focus:border-zenPrimary mb-3" rows={3}></textarea>
-            <div className="flex justify-end">
-              <button onClick={handleAddComment} disabled={isSubmittingComment || !newComment.trim()} className="px-4 py-2 bg-zenPrimary text-white text-sm font-semibold rounded shadow-sm hover:bg-zenSecondary disabled:opacity-50 transition-colors">
-                {isSubmittingComment ? 'Submitting...' : 'Submit Comment'}
-              </button>
+                    <p className="text-gray-700 whitespace-pre-wrap">{comment.content}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="bg-white border border-gray-200 p-4 rounded-lg">
+              <h5 className="text-sm font-bold text-gray-700 mb-2">Add a Comment</h5>
+              {commentError && <div className="mb-3 p-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded">{commentError}</div>}
+              <textarea value={newComment} onChange={(e) => { setNewComment(e.target.value); setCommentError(null); }} placeholder="Type your comment here..." className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zenPrimary/50 focus:border-zenPrimary mb-3" rows={3}></textarea>
+              <div className="flex justify-end">
+                <button onClick={handleAddComment} disabled={isSubmittingComment || !newComment.trim()} className="px-4 py-2 bg-zenPrimary text-white text-sm font-semibold rounded shadow-sm hover:bg-zenSecondary disabled:opacity-50 transition-colors">
+                  {isSubmittingComment ? 'Submitting...' : 'Submit Comment'}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Internal Notes Section (IT & Admin only) */}
-        {isStaffOrAdmin && (
+        {/* Internal Notes Tab (IT & Admin only) */}
+        {(isStaffOrAdmin && activeTab === 'internal') && (
           <div>
-            <h4 className="text-lg font-bold text-yellow-800 mb-4 flex items-center">
-              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
-              Internal Notes
-            </h4>
             {(!notes || notes.length === 0) ? (
               <p className="text-gray-500 italic mb-6">No internal notes yet</p>
             ) : (
@@ -475,7 +515,6 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
         )}
 
       </div>
-
     </div>
   );
 };

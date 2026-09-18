@@ -5,13 +5,14 @@ import { CreateTicket } from './components/CreateTicket';
 import { TicketDetail } from './components/TicketDetail';
 import { useAuth } from './contexts/AuthContext';
 import { UserManagementPage } from './pages/UserManagementPage';
+import { StaffQueuePage } from './pages/StaffQueuePage';
 
 function App() {
   const { user, logout } = useAuth();
   const [healthLoading, setHealthLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   
-  const [view, setView] = useState<'LIST' | 'CREATE' | 'DETAIL' | 'USER_MANAGEMENT'>('LIST');
+  const [view, setView] = useState<'LIST' | 'CREATE' | 'DETAIL' | 'USER_MANAGEMENT' | 'STAFF_QUEUE'>('LIST');
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
 
   const handleCheckSystem = async () => {
@@ -54,6 +55,14 @@ function App() {
           </div>
           
           <div className="flex space-x-4 items-center">
+            {user && (user.role === 'IT_STAFF' || user.role === 'ADMINISTRATOR') && (
+              <button 
+                onClick={() => setView('STAFF_QUEUE')}
+                className="text-sm font-semibold text-zenPrimary hover:text-zenSecondary transition-colors"
+              >
+                Staff Queue
+              </button>
+            )}
             {user && user.role === 'ADMINISTRATOR' && (
               <button 
                 onClick={() => setView('USER_MANAGEMENT')}
@@ -107,6 +116,7 @@ function App() {
             <TicketDetail ticketId={selectedTicketId} onBack={() => setView('LIST')} />
           )}
           {view === 'USER_MANAGEMENT' && <UserManagementPage />}
+          {view === 'STAFF_QUEUE' && <StaffQueuePage onView={handleViewTicket} />}
         </div>
 
       </main>
