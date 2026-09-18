@@ -4,7 +4,7 @@ import {
   getTicketById, deleteAttachment, uploadAttachmentToTicket, downloadAttachment, 
   addPublicComment, getTicketComments, toggleAppearsResolved,
   getTicketNotes, addTicketNote,
-  updateTicketOwner, updateTicketPriority, updateTicketStatus
+  updateStaffTicketOwner, updateStaffTicketPriority, updateStaffTicketStatus
 } from '../api';
 
 interface Attachment {
@@ -118,7 +118,7 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
     if (!ticket) return;
     setIsUpdatingIT(true);
     try {
-      const updatedTicket = await updateTicketStatus(ticketId, status);
+      const updatedTicket = await updateStaffTicketStatus(ticketId, status);
       setTicket(updatedTicket);
     } catch (err: any) {
       alert(err.message || 'Failed to update status');
@@ -131,7 +131,7 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
     if (!ticket) return;
     setIsUpdatingIT(true);
     try {
-      const updatedTicket = await updateTicketPriority(ticketId, priority);
+      const updatedTicket = await updateStaffTicketPriority(ticketId, priority);
       setTicket(updatedTicket);
     } catch (err: any) {
       alert(err.message || 'Failed to update priority');
@@ -144,7 +144,7 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
     if (!user || !ticket) return;
     setIsUpdatingIT(true);
     try {
-      const updatedTicket = await updateTicketOwner(ticketId);
+      const updatedTicket = await updateStaffTicketOwner(ticketId);
       setTicket(updatedTicket);
     } catch (err: any) {
       alert(err.message || 'Failed to claim ticket');

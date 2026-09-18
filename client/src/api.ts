@@ -193,37 +193,37 @@ export const toggleAppearsResolved = async (ticketId: string, appearsResolved: b
   }
 };
 
-export const updateTicketOwner = async (ticketId: string) => {
+export const updateStaffTicketOwner = async (ticketId: string) => {
   try {
     return await apiFetch(`/api/staff/tickets/${ticketId}/owner`, {
       method: 'PATCH',
     });
   } catch (error) {
-    console.error('API Error - updateTicketOwner:', error);
+    console.error('API Error - updateStaffTicketOwner:', error);
     throw error;
   }
 };
 
-export const updateTicketPriority = async (ticketId: string, itPriority: string) => {
+export const updateStaffTicketPriority = async (ticketId: string, itPriority: string) => {
   try {
     return await apiFetch(`/api/staff/tickets/${ticketId}/priority`, {
       method: 'PATCH',
       body: JSON.stringify({ itPriority }),
     });
   } catch (error) {
-    console.error('API Error - updateTicketPriority:', error);
+    console.error('API Error - updateStaffTicketPriority:', error);
     throw error;
   }
 };
 
-export const updateTicketStatus = async (ticketId: string, status: string) => {
+export const updateStaffTicketStatus = async (ticketId: string, status: string) => {
   try {
     return await apiFetch(`/api/staff/tickets/${ticketId}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status }),
     });
   } catch (error) {
-    console.error('API Error - updateTicketStatus:', error);
+    console.error('API Error - updateStaffTicketStatus:', error);
     throw error;
   }
 };
