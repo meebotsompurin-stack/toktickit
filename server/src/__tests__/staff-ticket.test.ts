@@ -46,12 +46,12 @@ describe('Staff Ticket Updates API', () => {
     vi.clearAllMocks();
   });
 
-  it('should allow IT_STAFF to claim a ticket (update ownerId)', async () => {
+  it('should allow IT_STAFF to update a ticket owner (update ownerId)', async () => {
     prisma.ticket.findUnique.mockResolvedValue({ id: 't1', ownerId: null });
     prisma.ticket.update.mockResolvedValue({ id: 't1', ownerId: 'staff123' });
 
     const res = await request(app)
-      .patch('/api/staff/tickets/t1/claim')
+      .patch('/api/staff/tickets/t1/owner')
       .set('x-mock-role', 'IT_STAFF')
       .send();
 

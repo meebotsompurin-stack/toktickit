@@ -4,7 +4,7 @@ import {
   getTicketById, deleteAttachment, uploadAttachmentToTicket, downloadAttachment, 
   addPublicComment, getTicketComments, toggleAppearsResolved,
   getTicketNotes, addTicketNote,
-  claimTicket, updateTicketPriority, updateTicketStatus
+  updateTicketOwner, updateTicketPriority, updateTicketStatus
 } from '../api';
 
 interface Attachment {
@@ -144,7 +144,7 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
     if (!user || !ticket) return;
     setIsUpdatingIT(true);
     try {
-      const updatedTicket = await claimTicket(ticketId);
+      const updatedTicket = await updateTicketOwner(ticketId);
       setTicket(updatedTicket);
     } catch (err: any) {
       alert(err.message || 'Failed to claim ticket');

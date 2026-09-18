@@ -5,22 +5,55 @@ const prisma = new PrismaClient();
 
 export const getStaffTicketsHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const tickets = await prisma.ticket.findMany({
-      include: {
-        category: true,
-        relatedSystem: true,
-        requester: { select: { name: true, email: true } },
-        owner: { select: { name: true, email: true } },
-      },
-      orderBy: { createdAt: 'desc' }
+    const { status, itPriority, search, page = '1', limit = '10' } = req.query;
+    
+    const where: any = {};
+    if (status) where.status = status;
+    if (itPriority) where.itPriority = itPriority;
+    if (search) {
+      where.OR = [
+        { ticketNumber: { contains: search as string, mode: 'insensitive' } },
+        { summary: { contains: search as string, mode: 'insensitive' } }
+      ];
+    }
+
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    const [data, total] = await Promise.all([
+      prisma.ticket.findMany({
+        where,
+        skip,
+        take: limitNum,
+        include: {
+          category: true,
+          relatedSystem: true,
+          requester: { select: { name: true, email: true } },
+          owner: { select: { name: true, email: true } },
+        },
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.ticket.count({ where })
+    ]);
+
+    const totalPages = Math.ceil(total / limitNum);
+
+    res.status(200).json({
+      data,
+      meta: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: totalPages === 0 ? 1 : totalPages
+      }
     });
-    res.status(200).json(tickets);
   } catch (error) {
     next(error);
   }
 };
 
-export const claimTicketHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const updateTicketOwnerHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
     const ticket = await prisma.ticket.findUnique({ where: { id } });

@@ -193,13 +193,13 @@ export const toggleAppearsResolved = async (ticketId: string, appearsResolved: b
   }
 };
 
-export const claimTicket = async (ticketId: string) => {
+export const updateTicketOwner = async (ticketId: string) => {
   try {
-    return await apiFetch(`/api/staff/tickets/${ticketId}/claim`, {
+    return await apiFetch(`/api/staff/tickets/${ticketId}/owner`, {
       method: 'PATCH',
     });
   } catch (error) {
-    console.error('API Error - claimTicket:', error);
+    console.error('API Error - updateTicketOwner:', error);
     throw error;
   }
 };
@@ -228,9 +228,10 @@ export const updateTicketStatus = async (ticketId: string, status: string) => {
   }
 };
 
-export const getStaffTickets = async () => {
+export const getStaffTickets = async (params: any = {}) => {
   try {
-    return await apiFetch(`/api/staff/tickets`, { method: 'GET' });
+    const query = new URLSearchParams(params).toString();
+    return await apiFetch(`/api/staff/tickets${query ? '?' + query : ''}`, { method: 'GET' });
   } catch (error) {
     console.error('API Error - getStaffTickets:', error);
     throw error;
