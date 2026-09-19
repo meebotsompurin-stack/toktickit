@@ -1,5 +1,9 @@
 # Lab 3 API Contract & Specification
 
+> **Lab 3 Final Implementation Status:**
+> - **Authentication:** Upgraded seamlessly from Lab 2's fake `X-Requester-Id` header to a real Bearer Token (JWT) session flow.
+> - **Authorization Matrix:** Namespace routes (`/api/staff/*`, `/api/admin/*`) strictly enforce permissions for `REQUESTER`, `IT_STAFF`, and `ADMINISTRATOR` via middleware.
+
 ## 1. Global Authentication & Security Strategy
 
 ### 1.1 Bearer Token Strategy
