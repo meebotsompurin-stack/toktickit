@@ -154,6 +154,7 @@ export const downloadAttachment = async (ticketId: string, attachmentId: string,
     a.click();
     a.remove();
     window.URL.revokeObjectURL(url);
+    return blob;
   } catch (error) {
     console.error('API Error - downloadAttachment:', error);
     throw error;
@@ -189,6 +190,72 @@ export const toggleAppearsResolved = async (ticketId: string, appearsResolved: b
     });
   } catch (error) {
     console.error('API Error - toggleAppearsResolved:', error);
+    throw error;
+  }
+};
+
+export const updateStaffTicketOwner = async (ticketId: string) => {
+  try {
+    return await apiFetch(`/api/staff/tickets/${ticketId}/owner`, {
+      method: 'PATCH',
+    });
+  } catch (error) {
+    console.error('API Error - updateStaffTicketOwner:', error);
+    throw error;
+  }
+};
+
+export const updateStaffTicketPriority = async (ticketId: string, priority: string) => {
+  try {
+    return await apiFetch(`/api/staff/tickets/${ticketId}/priority`, {
+      method: 'PATCH',
+      body: JSON.stringify({ itPriority: priority }),
+    });
+  } catch (error) {
+    console.error('API Error - updateStaffTicketPriority:', error);
+    throw error;
+  }
+};
+
+export const updateStaffTicketStatus = async (ticketId: string, status: string) => {
+  try {
+    return await apiFetch(`/api/staff/tickets/${ticketId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  } catch (error) {
+    console.error('API Error - updateStaffTicketStatus:', error);
+    throw error;
+  }
+};
+
+export const getStaffTickets = async (params: any = {}) => {
+  try {
+    const query = new URLSearchParams(params).toString();
+    return await apiFetch(`/api/staff/tickets${query ? '?' + query : ''}`, { method: 'GET' });
+  } catch (error) {
+    console.error('API Error - getStaffTickets:', error);
+    throw error;
+  }
+};
+
+export const getTicketNotes = async (ticketId: string) => {
+  try {
+    return await apiFetch(`/api/tickets/${ticketId}/notes`, { method: 'GET' });
+  } catch (error) {
+    console.error('API Error - getTicketNotes:', error);
+    throw error;
+  }
+};
+
+export const addTicketNote = async (ticketId: string, note: string) => {
+  try {
+    return await apiFetch(`/api/tickets/${ticketId}/notes`, {
+      method: 'POST',
+      body: JSON.stringify({ content: note }),
+    });
+  } catch (error) {
+    console.error('API Error - addTicketNote:', error);
     throw error;
   }
 };
