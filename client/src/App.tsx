@@ -6,6 +6,7 @@ import { TicketDetail } from './components/TicketDetail';
 import { useAuth } from './contexts/AuthContext';
 import { UserManagementPage } from './pages/UserManagementPage';
 import { StaffQueuePage } from './pages/StaffQueuePage';
+import { apiFetch } from './api';
 
 function App() {
   const { user, logout } = useAuth();
@@ -19,8 +20,8 @@ function App() {
     setHealthLoading(true);
     setStatus('Loading...');
     try {
-      const response = await fetch('/api/health');
-      if (response.ok) {
+      const response = await apiFetch('/api/health');
+      if (response && response.status === 'ok') {
         setStatus('System Status: Online');
       } else {
         setStatus('System Status: Offline. Unable to connect to TokTickIT API');

@@ -1,5 +1,9 @@
 # Lab 3 Test Plan and Results
 
+> **Lab 3 Final Implementation Status:**
+> - **Test Specs:** Replaced old mock logic with strict Auth tests enforcing real JWT verification and mocked Prisma interactions.
+> - **Playwright E2E Automation:** Successfully implemented Playwright E2E scripts to capture artifacts automatically across Desktop, Tablet, and Mobile viewports for all 4 major flows.
+
 ## 1. Test Strategy
 กลยุทธ์การทดสอบใน Lab 3 จะครอบคลุมระบบความปลอดภัย การพิสูจน์ตัวตน (Authentication), การควบคุมสิทธิ์ตามบทบาท (RBAC), เวิร์กโฟลว์ของเจ้าหน้าที่ไอที, ระบบจัดการผู้ใช้ของแอดมิน ตลอดจนการทดสอบความเข้ากันได้ย้อนหลัง (Regression Testing) ของฝั่ง Requester โดยแบ่งออกเป็น:
 *   **Unit & API Integration Tests:** ใช้ Vitest และ Supertest สำหรับทดสอบ Controller, Service, Middleware และ Database queries

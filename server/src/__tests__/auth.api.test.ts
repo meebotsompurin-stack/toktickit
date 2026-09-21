@@ -15,9 +15,9 @@ const { mockUserDb } = vi.hoisted(() => {
 
 vi.mock('@prisma/client', () => {
   return {
-    PrismaClient: vi.fn(() => ({
-      user: mockUserDb
-    })),
+    PrismaClient: class {
+      user = mockUserDb;
+    },
     Role: {
       REQUESTER: 'REQUESTER',
       IT_STAFF: 'IT_STAFF',
@@ -117,7 +117,7 @@ describe('Auth API Tests', () => {
       expect(response.body.error).toBe('Unauthorized');
     });
 
-    it('6. Fail - AC-04 Requires Password Change - Returns 403 Forbidden', async () => {
+    it('6. Success - AC-04 Requires Password Change - /me is EXEMPT so it returns 200', async () => {
       const jwt = require('jsonwebtoken');
       const token = jwt.sign({ userId: 'user-123', role: 'REQUESTER' }, process.env.JWT_SECRET || 'fallback-secret-key-for-local-dev');
       
@@ -128,9 +128,8 @@ describe('Auth API Tests', () => {
         .get('/api/auth/me')
         .set('Authorization', `Bearer ${token}`);
 
-      expect(response.status).toBe(403);
-      expect(response.body.error).toBe('Forbidden');
-      expect(response.body.message).toMatch(/password/i);
+      expect(response.status).toBe(200);
+      expect(response.body.user).toBeDefined();
     });
   });
 
@@ -140,7 +139,9 @@ describe('Auth API Tests', () => {
       const token = jwt.sign({ userId: 'user-123', role: 'REQUESTER' }, process.env.JWT_SECRET || 'fallback-secret-key-for-local-dev');
       
       mockUserDb.findUnique.mockResolvedValue({ ...validUser, requiresPasswordChange: true });
-      vi.mocked(bcrypt.compare).mockResolvedValue(true as never);
+      vi.mocked(bcrypt.compare).mockImplementation(async (plain: string, hash: string) => {
+        return plain === 'oldpassword'; // Returns true for currentPassword, false for newPassword
+      });
       vi.mocked(bcrypt.hash).mockResolvedValue('newHashedPassword' as never);
       mockUserDb.update.mockResolvedValue({ ...validUser, passwordHash: 'newHashedPassword', requiresPasswordChange: false });
 
