@@ -1,5 +1,9 @@
 # Lab 3 Sprint Engineering Specification
 
+> **Lab 3 Final Implementation Status:**
+> - **Authentication:** Upgraded seamlessly from Lab 2's deprecated `X-Requester-Id` header to a real Bearer Token (JWT) session flow.
+> - **Authorization Matrix:** The RBAC matrix (detailed in Section 6) correctly reflects and enforces the boundary permissions for `REQUESTER`, `IT_STAFF`, and `ADMINISTRATOR` across the platform.
+
 ## 1. Sprint Goal
 แทนที่ระบบจำลองสิทธิ์ (Dev Requester Selector) ใน Lab 2 ด้วยระบบยืนยันตัวตนและความปลอดภัยเต็มรูปแบบ (Secure Authentication & RBAC) พร้อมเพิ่มเวิร์กโฟลว์สำหรับเจ้าหน้าที่ไอที (IT Staff Queue & Ticket Triage) และระบบบริหารจัดการผู้ใช้สำหรับผู้ดูแลระบบ (Admin User Management) โดยต้องรักษาความเข้ากันได้ย้อนหลัง (Backward Compatibility) และไม่ส่งผลกระทบต่อข้อมูลเดิมจาก Lab 2
 

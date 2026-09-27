@@ -73,16 +73,4 @@ export const requireRole = (roles: Role[]) => {
   };
 };
 
-// Kept for backward compatibility with Lab 1-2 routes until they are refactored
-export const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
-  const requesterId = req.header('X-Requester-Id');
 
-  if (!requesterId || requesterId.trim() === '') {
-    res.status(401).json({
-      error: 'Unauthorized',
-      message: 'X-Requester-Id header is required or invalid'
-    });
-    return;
-  }
-  next();
-};
