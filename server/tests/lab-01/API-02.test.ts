@@ -2,11 +2,23 @@ import request from 'supertest';
 import { describe, it, expect } from 'vitest';
 import app from '../../src/index';
 
+import jwt from 'jsonwebtoken';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
 describe('GET /api/categories', () => {
   it('should return 200 and an array of exactly 4 categories in order', async () => {
+    const user = await prisma.user.findFirst({ where: { isActive: true } });
+    if (!user) throw new Error('No user found in DB. Did you seed?');
+
+    const token = jwt.sign(
+      { userId: user.id, role: user.role },
+      process.env.JWT_SECRET || 'fallback-secret-key-for-local-dev'
+    );
     const response = await request(app)
       .get('/api/categories')
-      .set('X-Requester-Id', 'user-1');
+      .set('Authorization', `Bearer ${token}`);
     expect(response.status).toBe(200);
     expect(Array.isArray(response.body)).toBe(true);
     

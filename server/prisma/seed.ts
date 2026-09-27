@@ -187,19 +187,20 @@ async function main() {
   });
 
   // --- 4e. Active Administrator (1) ---
-  const admin1 = await prisma.user.upsert({
-    where: { email: 'admin@toktick.dev' },
+  const admin = await prisma.user.upsert({
+    where: { email: 'admin@toktickit.dev' },
     update: {
       passwordHash: defaultHash,
-      isActive: true,
       requiresPasswordChange: false,
+      role: 'ADMINISTRATOR',
+      isActive: true,
     },
     create: {
-      name: 'Supaporn Admin',
-      email: 'admin@toktick.dev',
-      passwordHash: defaultHash,
-      role: Role.ADMINISTRATOR,
+      name: 'Admin Sup',
+      email: 'admin@toktickit.dev',
+      role: 'ADMINISTRATOR',
       isActive: true,
+      passwordHash: defaultHash,
       requiresPasswordChange: false,
     },
   });
