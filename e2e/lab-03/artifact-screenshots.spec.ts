@@ -42,8 +42,11 @@ const sel = {
 };
 
 async function doLogin(page: Page, email: string, pass: string) {
-  await page.evaluate(() => window.localStorage.clear()).catch(() => {});
-  await page.goto('/login');
+  
+  await page.goto('/');
+    await page.evaluate(() => window.localStorage.clear());
+    await page.goto('/login');
+
   await page.locator(sel.email).first().waitFor({ state: 'visible', timeout: 10000 });
   await page.locator(sel.email).first().fill(email);
   await page.locator(sel.pass).first().fill(pass);
@@ -61,20 +64,20 @@ for (const vp of viewports) {
       await captureScreenshot(page, 'authentication', vp.name, 'invalid-login');
 
       // 1.2 Mandatory Password Change
-      await doLogin(page, 'newbie@toktickit.dev', 'TempPass123!');
-      await page.waitForURL('**/change-password', { timeout: 10000 }).catch(() => {});
+      await doLogin(page, 'newbie@toktickit.dev', process.env.TEST_TEMP_PASSWORD || 'TempPass123!');
+      await page.waitForURL('**/change-password', { timeout: 10000 });
       await page.waitForTimeout(1000); 
       await captureScreenshot(page, 'authentication', vp.name, 'mandatory-password-change');
 
       // 1.3 Valid Login
-      await doLogin(page, 'piyanuch.staff@toktickit.dev', 'password123');
-      await page.locator(sel.staffQueue).first().waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
+      await doLogin(page, 'piyanuch.staff@toktickit.dev', process.env.TEST_PASSWORD || 'password123');
+      await page.locator(sel.staffQueue).first().waitFor({ state: 'visible', timeout: 10000 });
       await page.waitForTimeout(1000);
       await captureScreenshot(page, 'authentication', vp.name, 'valid-login');
     });
 
     test('2. Staff Queue Flow', async ({ page }) => {
-      await doLogin(page, 'piyanuch.staff@toktickit.dev', 'password123');
+      await doLogin(page, 'piyanuch.staff@toktickit.dev', process.env.TEST_PASSWORD || 'password123');
       const queueBtn = page.locator(sel.staffQueue).first();
       await queueBtn.waitFor({ state: 'visible', timeout: 15000 });
       await queueBtn.click();
@@ -95,7 +98,7 @@ for (const vp of viewports) {
     });
 
     test('3. Staff Ticket Detail Flow', async ({ page }) => {
-      await doLogin(page, 'piyanuch.staff@toktickit.dev', 'password123');
+      await doLogin(page, 'piyanuch.staff@toktickit.dev', process.env.TEST_PASSWORD || 'password123');
       
       const queueBtn = page.locator(sel.staffQueue).first();
       await queueBtn.waitFor({ state: 'visible', timeout: 15000 });
@@ -117,7 +120,7 @@ for (const vp of viewports) {
 
         const statusSelect = page.locator(sel.statusSelect).first();
         if (await statusSelect.isVisible()) {
-          await statusSelect.selectOption({ index: 1 }).catch(() => {});
+          await statusSelect.selectOption({ index: 1 });
           await page.waitForTimeout(1000);
           await captureScreenshot(page, 'staff-ticket-detail', vp.name, 'status-update');
         }
@@ -139,7 +142,7 @@ for (const vp of viewports) {
     });
 
     test('4. User Management Flow', async ({ page }) => {
-      await doLogin(page, 'admin@toktick.dev', 'password123');
+      await doLogin(page, 'admin@toktick.dev', process.env.TEST_PASSWORD || 'password123');
       
       const adminDashBtn = page.locator(sel.adminDash).first();
       await adminDashBtn.waitFor({ state: 'visible', timeout: 15000 });
