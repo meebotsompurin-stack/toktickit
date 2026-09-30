@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import fs from 'fs';
+import path from 'path';
 import * as AttachmentService from '../services/attachment.service';
 import * as TicketService from '../services/ticket.service';
 
 export const uploadHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const requesterId = req.header('X-Requester-Id') as string;
+    const user = req.user!;
     const { ticketId } = req.params;
 
     if (!req.file) {
@@ -19,7 +20,7 @@ export const uploadHandler = async (req: Request, res: Response, next: NextFunct
       throw { statusCode: 404, error: 'Not Found', message: 'Ticket not found' };
     }
 
-    if (ticket.requesterId !== requesterId) {
+    if (user.role === 'REQUESTER' && ticket.requesterId !== user.id) {
       fs.unlinkSync(req.file.path); // ลบไฟล์ทิ้งถ้าไม่มีสิทธิ์
       throw { statusCode: 403, error: 'Forbidden', message: 'You do not have permission to perform this action' };
     }
@@ -68,7 +69,7 @@ export const uploadHandler = async (req: Request, res: Response, next: NextFunct
 
 export const deleteHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const requesterId = req.header('X-Requester-Id') as string;
+    const user = req.user!;
     const { id } = req.params;
 
     const attachment = await AttachmentService.getAttachmentWithTicket(id);
@@ -77,12 +78,12 @@ export const deleteHandler = async (req: Request, res: Response, next: NextFunct
     }
 
     // 1. ตรวจสอบสิทธิ์ (Ownership) เช็คจาก Ticket ที่ไฟล์นี้ผูกอยู่
-    if (attachment.ticket.requesterId !== requesterId) {
+    if (user.role === 'REQUESTER' && attachment.ticket.requesterId !== user.id) {
       throw { statusCode: 403, error: 'Forbidden', message: 'You do not have permission to perform this action' };
     }
 
     // 2. ทำ Soft-remove (BR-07)
-    await AttachmentService.softRemoveAttachment(id, requesterId);
+    await AttachmentService.softRemoveAttachment(id, user.id);
 
     res.status(200).json({ message: 'Attachment successfully removed' });
   } catch (error) {
@@ -90,11 +91,9 @@ export const deleteHandler = async (req: Request, res: Response, next: NextFunct
   }
 };
 
-import path from 'path';
-
 export const downloadAttachmentHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const requesterId = req.header('X-Requester-Id') as string;
+    const user = req.user!;
     const { ticketId, attachmentId } = req.params;
 
     const attachment = await AttachmentService.getAttachmentWithTicket(attachmentId);
@@ -110,7 +109,7 @@ export const downloadAttachmentHandler = async (req: Request, res: Response, nex
     }
 
     // 3. ตรวจสอบ Ownership
-    if (attachment.ticket.requesterId !== requesterId) {
+    if (user.role === 'REQUESTER' && attachment.ticket.requesterId !== user.id) {
       throw { statusCode: 403, error: 'Forbidden', message: 'You do not have permission to download this file' };
     }
 

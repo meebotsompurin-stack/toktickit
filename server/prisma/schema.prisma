@@ -7,19 +7,71 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Priority {
-  Low
-  Medium
-  High
+// -----------------------------------------------------
+// Enums
+// -----------------------------------------------------
+
+enum Role {
+  REQUESTER
+  IT_STAFF
+  ADMINISTRATOR
 }
 
 enum TicketStatus {
-  New
-  Open
-  InProgress
-  Resolved
-  Closed
+  NEW
+  OPEN
+  IN_PROGRESS
+  WAITING_FOR_REQUESTER
+  RESOLVED
+  CLOSED
+  REOPENED
+  CANCELLED
 }
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+// -----------------------------------------------------
+// User (Lab 3: replaces Dev Requester Selector)
+// -----------------------------------------------------
+
+model User {
+  id                     String   @id @default(cuid())
+  name                   String
+  email                  String   @unique
+  passwordHash           String
+  role                   Role     @default(REQUESTER)
+  isActive               Boolean  @default(true)
+  requiresPasswordChange Boolean  @default(true)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  // Relations
+  ticketsRequested Ticket[]        @relation("TicketRequester")
+  ticketsOwned     Ticket[]        @relation("TicketOwner")
+  ticketComments   TicketComment[]
+}
+
+// -----------------------------------------------------
+// Legacy Requester (Lab 1-2, kept for migration safety)
+// -----------------------------------------------------
+
+model Requester {
+  id        String   @id @default(uuid())
+  name      String
+  isActive  Boolean  @default(true)
+  tickets   Ticket[] @relation("LegacyRequester")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// -----------------------------------------------------
+// Reference Data
+// -----------------------------------------------------
 
 model Category {
   id        String   @id @default(uuid())
@@ -37,34 +89,47 @@ model RelatedSystem {
   updatedAt DateTime @updatedAt
 }
 
-model Requester {
-  id        String   @id @default(uuid())
-  name      String
-  isActive  Boolean  @default(true)
-  tickets   Ticket[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
+// -----------------------------------------------------
+// Ticket (enhanced for Lab 3)
+// -----------------------------------------------------
 
 model Ticket {
-  id                String         @id @default(uuid())
-  ticketNumber      String         @unique
+  id                String        @id @default(uuid())
+  ticketNumber      String        @unique
   categoryId        String
-  category          Category       @relation(fields: [categoryId], references: [id])
+  category          Category      @relation(fields: [categoryId], references: [id])
   relatedSystemId   String
-  relatedSystem     RelatedSystem  @relation(fields: [relatedSystemId], references: [id])
-  requestedPriority Priority
-  status            TicketStatus
-  summary           String         @db.VarChar(100)
-  description       String         @db.VarChar(1000)
-  requesterId       String
-  requester         Requester      @relation(fields: [requesterId], references: [id])
-  attachments       Attachment[]
-  createdAt         DateTime       @default(now())
-  updatedAt         DateTime       @updatedAt
+  relatedSystem     RelatedSystem @relation(fields: [relatedSystemId], references: [id])
+  requestedPriority Priority      @default(MEDIUM)
+  itPriority        Priority?
+  status            TicketStatus  @default(NEW)
+  summary           String        @db.VarChar(100)
+  description       String        @db.VarChar(1000)
+  appearsResolved   Boolean       @default(false)
+
+  // New Lab 3 relations (User-based)
+  requesterId String?
+  requester   User?   @relation("TicketRequester", fields: [requesterId], references: [id])
+  ownerId     String?
+  owner       User?   @relation("TicketOwner", fields: [ownerId], references: [id])
+
+  // Legacy relation (kept for backward-compatible migration)
+  legacyRequesterId String?
+  legacyRequester   Requester? @relation("LegacyRequester", fields: [legacyRequesterId], references: [id])
+
+  attachments Attachment[]
+  comments    TicketComment[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
 
   @@index([requesterId])
+  @@index([ownerId])
+  @@index([legacyRequesterId])
 }
+
+// -----------------------------------------------------
+// Attachment (unchanged from Lab 2)
+// -----------------------------------------------------
 
 model Attachment {
   id        String    @id @default(uuid())
@@ -78,4 +143,21 @@ model Attachment {
   deletedAt DateTime?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+}
+
+// -----------------------------------------------------
+// TicketComment (Merged PublicComment and InternalNote)
+// -----------------------------------------------------
+
+model TicketComment {
+  id         String   @id @default(cuid())
+  ticketId   String
+  ticket     Ticket   @relation(fields: [ticketId], references: [id])
+  authorId   String
+  author     User     @relation(fields: [authorId], references: [id])
+  content    String
+  isInternal Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([ticketId])
 }

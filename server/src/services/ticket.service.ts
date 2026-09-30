@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 export const createTicket = async (data: {
   categoryId: string;
   relatedSystemId: string;
-  requestedPriority: 'Low' | 'Medium' | 'High';
+  requestedPriority: string;
   summary: string;
   description: string;
   requesterId: string;
@@ -32,11 +32,11 @@ export const createTicket = async (data: {
       ticketNumber,
       categoryId: data.categoryId,
       relatedSystemId: data.relatedSystemId,
-      requestedPriority: data.requestedPriority,
+      requestedPriority: data.requestedPriority.toUpperCase() as any,
       summary: data.summary,
       description: data.description,
       requesterId: data.requesterId,
-      status: 'New', // ตั้งค่าเริ่มต้นเป็น New
+      status: 'NEW', // ตั้งค่าเริ่มต้นเป็น New
     },
   });
   
@@ -44,7 +44,7 @@ export const createTicket = async (data: {
 };
 
 export const getTickets = async (
-  requesterId: string,
+  requesterId: string | undefined,
   params: {
     search?: string;
     categoryId?: string;
@@ -58,9 +58,10 @@ export const getTickets = async (
 ) => {
   const { search, categoryId, priority, status, sortBy = 'createdAt', sortOrder = 'desc', page, limit } = params;
   
-  const where: Prisma.TicketWhereInput = {
-    requesterId, // ดูเฉพาะตั๋วของตัวเองตาม Requester ID
-  };
+  const where: Prisma.TicketWhereInput = {};
+  if (requesterId) {
+    where.requesterId = requesterId;
+  }
   
   if (search) {
     where.OR = [
@@ -74,11 +75,11 @@ export const getTickets = async (
   }
   
   if (priority) {
-    where.requestedPriority = priority as any;
+    where.requestedPriority = priority.toUpperCase() as any;
   }
   
   if (status) {
-    where.status = status as any;
+    where.status = status.toUpperCase() as any;
   }
   
   const skip = (page - 1) * limit;

@@ -11,6 +11,9 @@ import attachmentRoutes from './routes/attachment.routes';
 import requesterRoutes from './requesters/requester.routes';
 import categoryRoutes from './categories/category.routes';
 import relatedSystemRoutes from './related-systems/related-system.routes';
+import authRoutes from './routes/auth.routes';
+import userRoutes from './routes/user.routes';
+import staffRoutes from './routes/staff.routes';
 import { errorMiddleware } from './middlewares/error.middleware';
 
 const app = express();
@@ -21,10 +24,8 @@ const prisma = new PrismaClient();
 app.use(cors());
 app.use(express.json());
 
-
-
 // ----------------------------------------------------
-// Public / Unprotected Routes (ถ้ามีในอนาคต)
+// Public / Unprotected Routes 
 // ----------------------------------------------------
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok', service: 'TokTickIT API' });
@@ -33,6 +34,9 @@ app.get('/api/health', (req, res) => {
 // ----------------------------------------------------
 // API Routes
 // ----------------------------------------------------
+app.use('/api/auth', authRoutes);
+app.use('/api/admin/users', userRoutes);
+app.use('/api/staff', staffRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/attachments', attachmentRoutes);
 app.use('/api/requesters', requesterRoutes);
