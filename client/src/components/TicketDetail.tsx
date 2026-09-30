@@ -232,7 +232,7 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
   const handleDownload = async (attachmentId: string, filename: string) => {
     setDownloadLoading(attachmentId);
     try {
-      const blob = await downloadAttachment(ticketId, attachmentId);
+      const blob = await downloadAttachment(ticketId, attachmentId, filename);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
