@@ -54,7 +54,7 @@ test.describe('ADMIN-05: Admin Flow', () => {
       await page.click('button:has-text("Save"), button:has-text("Update")');
       
       // Verify inactive state
-      await expect(row.locator('text=Inactive, .badge-danger, .badge-inactive').first()).toBeVisible();
+      await expect(row.locator(':has-text("Inactive"), .badge-danger, .badge-inactive').first()).toBeVisible();
     }
   });
 });
