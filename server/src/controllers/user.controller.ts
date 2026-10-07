@@ -1,8 +1,7 @@
 import { Request, Response } from 'express';
-import { PrismaClient, Role } from '@prisma/client';
+import { Role } from '@prisma/client';
+import { prisma } from '../lib/db';
 import bcrypt from 'bcrypt';
-
-const prisma = new PrismaClient();
 const SALT_ROUNDS = 12;
 
 export const getAllUsers = async (req: Request, res: Response): Promise<void> => {
