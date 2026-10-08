@@ -8,7 +8,8 @@ import {
   addPublicCommentHandler,
   addInternalNoteHandler,
   getInternalNotesHandler,
-  toggleAppearsResolvedHandler
+  toggleAppearsResolvedHandler,
+  getTicketActionsHandler
 } from '../controllers/ticket.controller';
 import { uploadHandler, downloadAttachmentHandler } from '../controllers/attachment.controller';
 import { uploadSingle } from '../middlewares/upload.middleware';
@@ -41,5 +42,8 @@ router.get('/:ticketId/notes', getInternalNotesHandler);
 
 // Toggle Appears Resolved
 router.patch('/:ticketId/resolution-flag', toggleAppearsResolvedHandler);
+
+// Actions Taken for Ticket (Requesters + Staff)
+router.get('/:ticketId/actions', getTicketActionsHandler);
 
 export default router;

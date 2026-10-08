@@ -440,6 +440,74 @@ async function main() {
   console.log('✅ Internal Notes seeded (3 notes across tickets).');
 
   // ═══════════════════════════════════════════
+  // 7. Actions Taken (Lab 4 — Idempotent)
+  // ═══════════════════════════════════════════
+  const act1Id = 'act_seed_001';
+  await prisma.actionTaken.upsert({
+    where: { id: act1Id },
+    update: {},
+    create: {
+      id: act1Id,
+      ticketId: ticket2.id,
+      actionDateTime: new Date('2026-10-06T09:00:00Z'),
+      description: 'Profiled PostgreSQL queries for ERP export endpoint',
+      result: 'Discovered missing composite index on export_logs table causing full table scans',
+      performedById: staff2.id,
+      followUpRequired: true,
+      followUpNote: 'Coordinate with DBA to create index during scheduled maintenance window',
+      attachmentNotes: 'Query plan saved as attachment #1',
+    },
+  });
+
+  const act2Id = 'act_seed_002';
+  await prisma.actionTaken.upsert({
+    where: { id: act2Id },
+    update: {},
+    create: {
+      id: act2Id,
+      ticketId: ticket2.id,
+      actionDateTime: new Date('2026-10-06T14:30:00Z'),
+      description: 'Assisted by configuring temporary timeout override in ERP app config',
+      result: 'Timeout increased from 30s to 120s; large exports succeed with slight delay',
+      performedById: staff1.id,
+      followUpRequired: false,
+    },
+  });
+
+  const act3Id = 'act_seed_003';
+  await prisma.actionTaken.upsert({
+    where: { id: act3Id },
+    update: {},
+    create: {
+      id: act3Id,
+      ticketId: ticket4.id,
+      actionDateTime: new Date('2026-10-05T11:00:00Z'),
+      description: 'Re-added user to marketing shared mailbox security group in Active Directory',
+      result: 'Replication completed across domain controllers, user confirmed full read/write access',
+      performedById: staff1.id,
+      followUpRequired: false,
+      attachmentNotes: 'AD group membership screenshot',
+    },
+  });
+
+  const act4Id = 'act_seed_004';
+  await prisma.actionTaken.upsert({
+    where: { id: act4Id },
+    update: {},
+    create: {
+      id: act4Id,
+      ticketId: ticket6.id,
+      actionDateTime: new Date('2026-10-05T16:00:00Z'),
+      description: 'Replaced faulty Cisco Catalyst port and upgraded AP firmware to v8.10',
+      result: 'All 3rd floor APs stable with 0 packet drops over 4 hours testing',
+      performedById: staff3.id,
+      followUpRequired: false,
+    },
+  });
+
+  console.log('✅ Actions Taken seeded (4 actions across tickets).');
+
+  // ═══════════════════════════════════════════
   console.log('\n🎉 Lab 3 seeding completed successfully!');
   console.log('───────────────────────────────────────');
   console.log('   Users:           11 (4 Req + 1 Inactive Req + 3 Staff + 1 Inactive Staff + 1 Admin + 1 Newbie)');

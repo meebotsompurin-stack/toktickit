@@ -116,8 +116,7 @@ export const getTicketByIdHandler = async (req: Request, res: Response, next: Ne
   }
 };
 
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+import { prisma } from '../lib/db';
 
 export const getPublicCommentsHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -233,6 +232,62 @@ export const toggleAppearsResolvedHandler = async (req: Request, res: Response, 
     });
 
     res.status(200).json(updatedTicket);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTicketActionsHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { ticketId } = req.params;
+    const user = req.user!;
+
+    const ticket = await prisma.ticket.findFirst({
+      where: {
+        OR: [
+          { id: ticketId },
+          { ticketNumber: ticketId },
+        ],
+      },
+      select: { id: true, requesterId: true },
+    });
+
+    if (!ticket) {
+      res.status(404).json({
+        error: 'Not Found',
+        message: 'Ticket not found',
+        statusCode: 404,
+        details: [],
+      });
+      return;
+    }
+
+    // RBAC: If user is REQUESTER, must be owner of ticket
+    if (user.role === 'REQUESTER' && ticket.requesterId !== user.id) {
+      res.status(403).json({
+        error: 'Forbidden',
+        message: 'You do not have permission to view actions for this ticket',
+        statusCode: 403,
+        details: [],
+      });
+      return;
+    }
+
+    const actions = await prisma.actionTaken.findMany({
+      where: { ticketId: ticket.id },
+      orderBy: { actionDateTime: 'asc' },
+      include: {
+        performedBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    res.status(200).json(actions);
   } catch (error) {
     next(error);
   }
