@@ -259,3 +259,77 @@ export const addTicketNote = async (ticketId: string, note: string) => {
     throw error;
   }
 };
+
+// ─────────────────────────────────────────────
+// Actions Taken API (Lab 4 — ISSUE-03)
+// ─────────────────────────────────────────────
+
+export interface ActionTaken {
+  id: string;
+  ticketId: string;
+  actionDateTime: string;
+  description: string;
+  result: string;
+  performedById: string;
+  performedBy?: {
+    id: string;
+    name: string;
+    email?: string;
+  };
+  followUpRequired: boolean;
+  followUpNote?: string | null;
+  attachmentNotes?: string | null;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateActionPayload {
+  actionDateTime?: string;
+  description: string;
+  result: string;
+  followUpRequired?: boolean;
+  followUpNote?: string | null;
+  attachmentNotes?: string | null;
+}
+
+export interface UpdateActionPayload {
+  description?: string;
+  result?: string;
+  followUpRequired?: boolean;
+  followUpNote?: string | null;
+  attachmentNotes?: string | null;
+}
+
+export const getActions = async (ticketId: string): Promise<ActionTaken[]> => {
+  try {
+    return await apiFetch(`/api/tickets/${ticketId}/actions`, { method: 'GET' });
+  } catch (error) {
+    console.error('API Error - getActions:', error);
+    throw error;
+  }
+};
+
+export const createAction = async (ticketId: string, data: CreateActionPayload): Promise<ActionTaken> => {
+  try {
+    return await apiFetch(`/api/staff/tickets/${ticketId}/actions`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  } catch (error) {
+    console.error('API Error - createAction:', error);
+    throw error;
+  }
+};
+
+export const updateAction = async (ticketId: string, actionId: string, data: UpdateActionPayload): Promise<ActionTaken> => {
+  try {
+    return await apiFetch(`/api/staff/tickets/${ticketId}/actions/${actionId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  } catch (error) {
+    console.error('API Error - updateAction:', error);
+    throw error;
+  }
+};
+
