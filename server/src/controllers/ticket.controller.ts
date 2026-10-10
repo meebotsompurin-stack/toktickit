@@ -213,22 +213,53 @@ export const getInternalNotesHandler = async (req: Request, res: Response, next:
 export const toggleAppearsResolvedHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { ticketId } = req.params;
-    const { appearsResolved } = req.body;
+    const { appearsResolved, version } = req.body;
 
-    const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+    let ticket: any = null;
+    if (typeof prisma.ticket.findFirst === 'function') {
+      ticket = await prisma.ticket.findFirst({
+        where: {
+          OR: [
+            { id: ticketId },
+            { ticketNumber: ticketId },
+          ],
+        },
+      });
+    }
+    if (!ticket && typeof prisma.ticket.findUnique === 'function') {
+      ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+    }
     if (!ticket) {
-      res.status(404).json({ error: 'Not Found', message: 'Ticket not found' });
+      res.status(404).json({ error: 'Not Found', message: 'Ticket not found', statusCode: 404, details: [] });
       return;
     }
 
     if (req.user!.role === 'REQUESTER' && ticket.requesterId !== req.user!.id) {
-      res.status(403).json({ error: 'Forbidden', message: 'You do not own this ticket' });
+      res.status(403).json({ error: 'Forbidden', message: 'You do not own this ticket', statusCode: 403, details: [] });
+      return;
+    }
+
+    if (version !== undefined && ticket.version !== Number(version)) {
+      res.status(409).json({
+        error: 'Conflict',
+        message: `Ticket version mismatch. Expected version ${ticket.version}, but received ${version}.`,
+        statusCode: 409,
+        details: [{
+          field: 'version',
+          expectedVersion: ticket.version,
+          currentServerVersion: ticket.version,
+          providedVersion: version,
+        }],
+      });
       return;
     }
 
     const updatedTicket = await prisma.ticket.update({
-      where: { id: ticketId },
-      data: { appearsResolved: Boolean(appearsResolved) }
+      where: { id: ticket.id },
+      data: {
+        appearsResolved: Boolean(appearsResolved),
+        version: { increment: 1 },
+      },
     });
 
     res.status(200).json(updatedTicket);

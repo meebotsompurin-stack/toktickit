@@ -121,6 +121,7 @@ model Ticket {
   attachments  Attachment[]
   comments     TicketComment[]
   actionsTaken ActionTaken[]
+  version      Int             @default(1)
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
 
@@ -180,6 +181,7 @@ model ActionTaken {
   followUpRequired Boolean  @default(false)
   followUpNote     String?  @db.VarChar(1000)
   attachmentNotes  String?  @db.VarChar(500)
+  version          Int      @default(1)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 

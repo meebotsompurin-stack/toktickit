@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   getTicketById, deleteAttachment, uploadAttachmentToTicket, downloadAttachment, 
@@ -36,6 +36,7 @@ interface Ticket {
   description: string;
   createdAt: string;
   appearsResolved: boolean;
+  version?: number;
   category?: { name: string };
   relatedSystem?: { name: string };
   attachments?: Attachment[];
@@ -46,7 +47,51 @@ interface Props {
   onBack: () => void;
 }
 
-const TICKET_STATUSES = ['NEW', 'OPEN', 'IN_PROGRESS', 'WAITING_FOR_REQUESTER', 'RESOLVED', 'CLOSED', 'REOPENED', 'CANCELLED'];
+const STATUS_TRANSITIONS: Record<string, { target: string; roles: string[] }[]> = {
+  NEW: [
+    { target: 'OPEN', roles: ['IT_STAFF', 'ADMINISTRATOR'] },
+    { target: 'CANCELLED', roles: ['REQUESTER', 'IT_STAFF', 'ADMINISTRATOR'] },
+  ],
+  OPEN: [
+    { target: 'IN_PROGRESS', roles: ['IT_STAFF', 'ADMINISTRATOR'] },
+    { target: 'WAITING_FOR_REQUESTER', roles: ['IT_STAFF', 'ADMINISTRATOR'] },
+    { target: 'CANCELLED', roles: ['IT_STAFF', 'ADMINISTRATOR'] },
+  ],
+  IN_PROGRESS: [
+    { target: 'WAITING_FOR_REQUESTER', roles: ['IT_STAFF', 'ADMINISTRATOR'] },
+    { target: 'RESOLVED', roles: ['IT_STAFF', 'ADMINISTRATOR'] },
+    { target: 'OPEN', roles: ['IT_STAFF', 'ADMINISTRATOR'] },
+    { target: 'CANCELLED', roles: ['IT_STAFF', 'ADMINISTRATOR'] },
+  ],
+  WAITING_FOR_REQUESTER: [
+    { target: 'IN_PROGRESS', roles: ['REQUESTER', 'IT_STAFF', 'ADMINISTRATOR'] },
+    { target: 'RESOLVED', roles: ['IT_STAFF', 'ADMINISTRATOR'] },
+    { target: 'CANCELLED', roles: ['IT_STAFF', 'ADMINISTRATOR'] },
+  ],
+  RESOLVED: [
+    { target: 'CLOSED', roles: ['REQUESTER', 'IT_STAFF', 'ADMINISTRATOR'] },
+    { target: 'REOPENED', roles: ['REQUESTER', 'IT_STAFF', 'ADMINISTRATOR'] },
+  ],
+  CLOSED: [
+    { target: 'REOPENED', roles: ['IT_STAFF', 'ADMINISTRATOR'] },
+  ],
+  REOPENED: [
+    { target: 'IN_PROGRESS', roles: ['IT_STAFF', 'ADMINISTRATOR'] },
+    { target: 'WAITING_FOR_REQUESTER', roles: ['IT_STAFF', 'ADMINISTRATOR'] },
+    { target: 'CANCELLED', roles: ['IT_STAFF', 'ADMINISTRATOR'] },
+  ],
+  CANCELLED: [],
+};
+
+const getPermittedNextStatuses = (currentStatus: string, role?: string): string[] => {
+  if (!currentStatus) return [];
+  const rules = STATUS_TRANSITIONS[currentStatus] || [];
+  const allowed = rules
+    .filter((r) => !role || r.roles.includes(role))
+    .map((r) => r.target);
+  return Array.from(new Set([currentStatus, ...allowed]));
+};
+
 const PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
 
 export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
@@ -76,6 +121,9 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
 
   const [isTogglingResolved, setIsTogglingResolved] = useState(false);
   const [isUpdatingIT, setIsUpdatingIT] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const isUpdatingStatusRef = useRef(false);
+  const [concurrencyConflict, setConcurrencyConflict] = useState<string | null>(null);
 
   // Tab State: 'public' | 'internal'
   const [activeTab, setActiveTab] = useState<'public' | 'internal'>('public');
@@ -105,26 +153,40 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
   const handleToggleResolved = async () => {
     if (!ticket) return;
     setIsTogglingResolved(true);
+    setConcurrencyConflict(null);
     try {
       const updatedTicket = await toggleAppearsResolved(ticket.id, !ticket.appearsResolved);
       setTicket({ ...ticket, appearsResolved: updatedTicket.appearsResolved });
     } catch (err: any) {
-      alert(err.message || 'Failed to toggle status');
+      if (err.statusCode === 409 || err.status === 409 || (err.message && err.message.toLowerCase().includes('conflict'))) {
+        setConcurrencyConflict('This ticket was updated concurrently by another user. Please refresh the page to view the latest version.');
+      } else {
+        alert(err.message || 'Failed to toggle status');
+      }
     } finally {
       setIsTogglingResolved(false);
     }
   };
 
   const handleUpdateStatus = async (status: string) => {
-    if (!ticket) return;
+    if (!ticket || isUpdatingStatusRef.current || status === ticket.status) return;
+    isUpdatingStatusRef.current = true;
+    setIsUpdatingStatus(true);
     setIsUpdatingIT(true);
+    setConcurrencyConflict(null);
     try {
       const updatedTicket = await updateStaffTicketStatus(ticketId, status);
       setTicket(updatedTicket);
     } catch (err: any) {
       console.error('Failed to update ticket status', err);
-      alert(err.message || 'Failed to update status');
+      if (err.statusCode === 409 || err.status === 409 || (err.message && err.message.toLowerCase().includes('conflict'))) {
+        setConcurrencyConflict('This ticket was updated concurrently by another user or session. Please refresh the page to view the latest version.');
+      } else {
+        alert(err.message || 'Failed to update status');
+      }
     } finally {
+      isUpdatingStatusRef.current = false;
+      setIsUpdatingStatus(false);
       setIsUpdatingIT(false);
     }
   };
@@ -288,6 +350,29 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
         Back to List
       </button>
 
+      {concurrencyConflict && (
+        <div className="mb-6 p-4 bg-amber-50 border-l-4 border-amber-500 rounded-r-lg text-amber-800 flex items-center justify-between shadow-sm" role="alert">
+          <div className="flex items-center space-x-3">
+            <svg className="w-5 h-5 text-amber-500 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            <div>
+              <p className="font-semibold text-sm">Concurrent Update Conflict (HTTP 409)</p>
+              <p className="text-xs">{concurrencyConflict}</p>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              setConcurrencyConflict(null);
+              fetchTicket();
+            }}
+            className="px-3 py-1.5 bg-amber-600 text-white rounded text-xs font-semibold hover:bg-amber-700 transition-colors shadow-sm shrink-0"
+          >
+            Refresh
+          </button>
+        </div>
+      )}
+
       <div className="flex justify-between items-start mb-6 border-b pb-4 border-zenPrimary">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">{ticket.ticketNumber}</h2>
@@ -318,15 +403,17 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
-          <p className="text-sm text-gray-500 font-semibold mb-1">Status</p>
+          <label htmlFor="ticket-status-select" className="text-sm text-gray-500 font-semibold mb-1 block">Status</label>
           {isStaffOrAdmin ? (
             <select
+              id="ticket-status-select"
+              aria-label="Status"
               value={ticket.status}
               onChange={(e) => handleUpdateStatus(e.target.value)}
-              disabled={isUpdatingIT}
+              disabled={isUpdatingStatus || isUpdatingIT}
               className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-zenPrimary focus:border-zenPrimary sm:text-sm rounded-md"
             >
-              {TICKET_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+              {getPermittedNextStatuses(ticket.status, user?.role).map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           ) : (
             <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
