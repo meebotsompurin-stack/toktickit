@@ -6,6 +6,7 @@ import {
   getTicketNotes, addTicketNote,
   updateStaffTicketOwner, updateStaffTicketPriority, updateStaffTicketStatus
 } from '../api';
+import { ActionsTaken } from './ActionsTaken';
 
 interface Attachment {
   id: string;
@@ -426,6 +427,11 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Actions Taken Section (Lab 4 — ISSUE-03) */}
+      <div className="border-t border-gray-200 pt-6 mb-8">
+        <ActionsTaken ticketId={ticket.ticketNumber || ticket.id} />
       </div>
 
       <div className="border-t border-gray-200 pt-6">
