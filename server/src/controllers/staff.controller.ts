@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../lib/db';
+import { isValidTransition } from '../lib/status-transitions';
 
 export const getStaffTicketsHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
@@ -54,14 +55,47 @@ export const getStaffTicketsHandler = async (req: Request, res: Response, next: 
 export const updateTicketOwnerHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
-    const ticket = await prisma.ticket.findUnique({ where: { id } });
+    const { version } = req.body;
+    let ticket: any = null;
+    if (typeof prisma.ticket.findFirst === 'function') {
+      ticket = await prisma.ticket.findFirst({
+        where: {
+          OR: [
+            { id },
+            { ticketNumber: id },
+          ],
+        },
+      });
+    }
+    if (!ticket && typeof prisma.ticket.findUnique === 'function') {
+      ticket = await prisma.ticket.findUnique({ where: { id } });
+    }
     if (!ticket) {
-      res.status(404).json({ error: 'Not Found', message: 'Ticket not found' });
+      res.status(404).json({ error: 'Not Found', message: 'Ticket not found', statusCode: 404, details: [] });
       return;
     }
+
+    if (version !== undefined && ticket.version !== Number(version)) {
+      res.status(409).json({
+        error: 'Conflict',
+        message: `Ticket version mismatch. Expected version ${ticket.version}, but received ${version}.`,
+        statusCode: 409,
+        details: [{
+          field: 'version',
+          expectedVersion: ticket.version,
+          currentServerVersion: ticket.version,
+          providedVersion: version,
+        }],
+      });
+      return;
+    }
+
     const updated = await prisma.ticket.update({
-      where: { id },
-      data: { ownerId: req.user!.id },
+      where: { id: ticket.id },
+      data: {
+        ownerId: req.user!.id,
+        version: { increment: 1 },
+      },
       include: { owner: { select: { name: true, email: true } } }
     });
     res.status(200).json(updated);
@@ -73,15 +107,47 @@ export const updateTicketOwnerHandler = async (req: Request, res: Response, next
 export const updatePriorityHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
-    const { itPriority } = req.body;
-    const ticket = await prisma.ticket.findUnique({ where: { id } });
+    const { itPriority, version } = req.body;
+    let ticket: any = null;
+    if (typeof prisma.ticket.findFirst === 'function') {
+      ticket = await prisma.ticket.findFirst({
+        where: {
+          OR: [
+            { id },
+            { ticketNumber: id },
+          ],
+        },
+      });
+    }
+    if (!ticket && typeof prisma.ticket.findUnique === 'function') {
+      ticket = await prisma.ticket.findUnique({ where: { id } });
+    }
     if (!ticket) {
-      res.status(404).json({ error: 'Not Found', message: 'Ticket not found' });
+      res.status(404).json({ error: 'Not Found', message: 'Ticket not found', statusCode: 404, details: [] });
       return;
     }
+
+    if (version !== undefined && ticket.version !== Number(version)) {
+      res.status(409).json({
+        error: 'Conflict',
+        message: `Ticket version mismatch. Expected version ${ticket.version}, but received ${version}.`,
+        statusCode: 409,
+        details: [{
+          field: 'version',
+          expectedVersion: ticket.version,
+          currentServerVersion: ticket.version,
+          providedVersion: version,
+        }],
+      });
+      return;
+    }
+
     const updated = await prisma.ticket.update({
-      where: { id },
-      data: { itPriority },
+      where: { id: ticket.id },
+      data: {
+        itPriority,
+        version: { increment: 1 },
+      },
       include: { owner: { select: { name: true, email: true } } }
     });
     res.status(200).json(updated);
@@ -93,15 +159,64 @@ export const updatePriorityHandler = async (req: Request, res: Response, next: N
 export const updateStatusHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
-    const ticket = await prisma.ticket.findUnique({ where: { id } });
+    const { status, version } = req.body;
+    let ticket: any = null;
+    if (typeof prisma.ticket.findFirst === 'function') {
+      ticket = await prisma.ticket.findFirst({
+        where: {
+          OR: [
+            { id },
+            { ticketNumber: id },
+          ],
+        },
+      });
+    }
+    if (!ticket && typeof prisma.ticket.findUnique === 'function') {
+      ticket = await prisma.ticket.findUnique({ where: { id } });
+    }
     if (!ticket) {
-      res.status(404).json({ error: 'Not Found', message: 'Ticket not found' });
+      res.status(404).json({ error: 'Not Found', message: 'Ticket not found', statusCode: 404, details: [] });
       return;
     }
+
+    if (ticket.status && !isValidTransition(ticket.status, status, req.user!.role)) {
+      res.status(422).json({
+        error: 'Unprocessable Entity',
+        message: `Invalid status transition from ${ticket.status} to ${status} for role ${req.user!.role}`,
+        statusCode: 422,
+        details: [
+          {
+            field: 'status',
+            message: `Transition from ${ticket.status} to ${status} is not permitted for ${req.user!.role}`,
+          },
+        ],
+      });
+      return;
+    }
+
+    if (version !== undefined && ticket.version !== Number(version)) {
+      res.status(409).json({
+        error: 'Conflict',
+        message: `Ticket version mismatch. Expected version ${ticket.version}, but received ${version}.`,
+        statusCode: 409,
+        details: [
+          {
+            field: 'version',
+            expectedVersion: ticket.version,
+            currentServerVersion: ticket.version,
+            providedVersion: version,
+          },
+        ],
+      });
+      return;
+    }
+
     const updated = await prisma.ticket.update({
-      where: { id },
-      data: { status },
+      where: { id: ticket.id },
+      data: {
+        status,
+        version: { increment: 1 },
+      },
       include: { owner: { select: { name: true, email: true } } }
     });
     res.status(200).json(updated);
@@ -190,7 +305,7 @@ export const createActionTakenHandler = async (req: Request, res: Response, next
 export const updateActionTakenHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const { ticketId, actionId } = req.params;
-    const { description, result, followUpRequired, followUpNote, attachmentNotes } = req.body;
+    const { description, result, followUpRequired, followUpNote, attachmentNotes, version } = req.body;
 
     const ticket = await prisma.ticket.findFirst({
       where: {
@@ -228,6 +343,21 @@ export const updateActionTakenHandler = async (req: Request, res: Response, next
       return;
     }
 
+    if (version !== undefined && existingAction.version !== Number(version)) {
+      res.status(409).json({
+        error: 'Conflict',
+        message: `ActionTaken version mismatch. Expected version ${existingAction.version}, but received ${version}.`,
+        statusCode: 409,
+        details: [{
+          field: 'version',
+          expectedVersion: existingAction.version,
+          currentServerVersion: existingAction.version,
+          providedVersion: version,
+        }],
+      });
+      return;
+    }
+
     const isFollowUpRequired = followUpRequired !== undefined ? Boolean(followUpRequired) : existingAction.followUpRequired;
     const note = followUpNote !== undefined ? followUpNote : existingAction.followUpNote;
 
@@ -247,6 +377,7 @@ export const updateActionTakenHandler = async (req: Request, res: Response, next
     if (followUpRequired !== undefined) dataToUpdate.followUpRequired = Boolean(followUpRequired);
     if (followUpNote !== undefined) dataToUpdate.followUpNote = isFollowUpRequired && followUpNote ? followUpNote.trim() : null;
     if (attachmentNotes !== undefined) dataToUpdate.attachmentNotes = attachmentNotes ? attachmentNotes.trim() : null;
+    dataToUpdate.version = { increment: 1 };
 
     const updated = await prisma.actionTaken.update({
       where: { id: actionId },
