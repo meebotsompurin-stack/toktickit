@@ -373,12 +373,12 @@ export const TicketDetail: React.FC<Props> = ({ ticketId, onBack }) => {
         </div>
       )}
 
-      <div className="flex justify-between items-start mb-6 border-b pb-4 border-zenPrimary">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 border-b pb-4 border-zenPrimary">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">{ticket.ticketNumber}</h2>
           <p className="text-sm text-gray-500 mt-1">Created on {new Date(ticket.createdAt).toLocaleString()}</p>
         </div>
-        <div className="flex flex-col items-end space-y-2">
+        <div className="flex flex-wrap items-center gap-2 sm:flex-col sm:items-end">
           <button
             onClick={handleToggleResolved}
             disabled={isTogglingResolved}

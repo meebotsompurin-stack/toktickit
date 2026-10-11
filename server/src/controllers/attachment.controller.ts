@@ -32,10 +32,10 @@ export const uploadHandler = async (req: Request, res: Response, next: NextFunct
     }
 
     // 2. ความปลอดภัย (BR-06): ตรวจสอบ MIME Type จากเนื้อหาไฟล์จริงๆ
-    // ใช้ Dynamic Import ตามคำแนะนำเพื่อเลี่ยงปัญหา ESM / CommonJS
-    const fileTypeModule = await eval('import("file-type")');
+    // ใช้ Standard Dynamic Import ที่ปลอดภัยโดยไม่ใช้ eval
+    const fileTypeModule: any = await import('file-type');
     // รองรับทั้ง v16 (fromFile) และ v17+ (fileTypeFromFile)
-    const checkFileType = fileTypeModule.fileTypeFromFile || fileTypeModule.default?.fromFile || fileTypeModule.fromFile;
+    const checkFileType = fileTypeModule.fileTypeFromFile || fileTypeModule.default?.fromFile || fileTypeModule.fromFile || fileTypeModule.default;
     
     if (!checkFileType) {
        throw new Error('Cannot load file-type module function');

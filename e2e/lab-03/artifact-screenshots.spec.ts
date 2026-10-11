@@ -32,7 +32,7 @@ const sel = {
   pass: 'input[type="password"], input[placeholder*="••••"]',
   signIn: 'button:has-text("Sign In"), button:has-text("Sign in"), button[type="submit"]',
   staffQueue: 'button:has-text("Staff Queue"), button:has-text("My Queue"), a:has-text("Staff Queue")',
-  adminDash: 'button:has-text("Admin Dashboard"), a:has-text("Admin Dashboard")',
+  adminDash: 'button:has-text("User Management"), button:has-text("Admin Dashboard"), a:has-text("User Management"), a:has-text("Admin Dashboard")',
   search: 'input[placeholder*="Ticket #"], input[placeholder*="Summary"], input[type="text"]',
   viewDetails: 'button:has-text("View Details")',
   claim: 'button:has-text("Claim")',
@@ -142,7 +142,7 @@ for (const vp of viewports) {
     });
 
     test('4. User Management Flow', async ({ page }) => {
-      await doLogin(page, 'admin@toktick.dev', process.env.TEST_PASSWORD || 'password123');
+      await doLogin(page, 'admin@toktickit.dev', process.env.TEST_PASSWORD || 'password123');
       
       const adminDashBtn = page.locator(sel.adminDash).first();
       await adminDashBtn.waitFor({ state: 'visible', timeout: 15000 });

@@ -2,7 +2,16 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { User, Role } from '@prisma/client';
 import { prisma } from '../lib/db';
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key-for-local-dev';
+import dotenv from 'dotenv';
+dotenv.config();
+
+const getJwtSecret = (): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is not defined');
+  }
+  return secret;
+};
 
 declare global {
   namespace Express {
@@ -23,7 +32,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     const token = authHeader.replace('Bearer ', '');
     
     // Verify token
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; role: Role };
+    const decoded = jwt.verify(token, getJwtSecret()) as { userId: string; role: Role };
 
     // Fetch user from database
     const user = await prisma.user.findUnique({ where: { id: decoded.userId } });

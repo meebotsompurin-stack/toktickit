@@ -2,9 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express from 'express';
-import { prisma } from './lib/db';
 import cors from 'cors';
-import path from 'path';
 
 import ticketRoutes from './routes/ticket.routes';
 import attachmentRoutes from './routes/attachment.routes';

@@ -138,7 +138,7 @@ export const ActionsTaken: React.FC<Props> = ({ ticketId }) => {
   return (
     <div className="card shadow-sm border-0 mb-4 bg-white">
       {/* Header */}
-      <div className="card-header bg-emerald-50 border-bottom border-emerald-100 d-flex justify-content-between align-items-center py-3">
+      <div className="card-header bg-emerald-50 border-bottom border-emerald-100 d-flex justify-content-between align-items-center py-3 flex-wrap gap-2">
         <div className="d-flex align-items-center gap-2">
           <span className="badge bg-emerald-600 text-white rounded-pill px-2.5 py-1 text-xs">
             {actions.length}

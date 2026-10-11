@@ -17,8 +17,8 @@ test.describe('ADMIN-05: Admin Flow', () => {
   });
 
   test('ADMIN-05: Admin User Management', async ({ page }) => {
-    // Navigate to Admin Dashboard
-    const adminLink = page.locator('button:has-text("Admin Dashboard"), a:has-text("Admin Dashboard"), a[href*="admin"]').first();
+    // Navigate to Admin Dashboard / User Management
+    const adminLink = page.locator('button:has-text("User Management"), button:has-text("Admin Dashboard"), a:has-text("User Management"), a:has-text("Admin Dashboard"), a[href*="admin"]').first();
     await adminLink.waitFor({ state: 'visible', timeout: 10000 });
     if (await adminLink.isVisible()) {
         await adminLink.click();
@@ -52,9 +52,14 @@ test.describe('ADMIN-05: Admin Flow', () => {
       const activeCheckbox = page.locator('input[name="isActive"], input[type="checkbox"]');
       await activeCheckbox.uncheck();
       await page.click('button:has-text("Save"), button:has-text("Update")');
-      
-      // Verify inactive state
-      await expect(row.locator(':has-text("Inactive"), .badge-danger, .badge-inactive').first()).toBeVisible();
+    } else {
+      const activeBtn = row.locator('button:has-text("Active")');
+      if (await activeBtn.isVisible()) {
+        await activeBtn.click();
+      }
     }
+    
+    // Verify inactive state
+    await expect(row.locator(':has-text("Inactive"), .badge-danger, .badge-inactive').first()).toBeVisible();
   });
 });
