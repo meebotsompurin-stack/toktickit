@@ -50,7 +50,7 @@ function App() {
   return (
     <div className="min-h-screen bg-zenBg text-gray-800 font-sans flex flex-col">
       <header className="bg-white shadow-sm border-b border-zenPale p-4 sticky top-0 z-10 shrink-0">
-        <div className="max-w-5xl mx-auto flex justify-between items-center">
+        <div className="max-w-5xl mx-auto flex justify-between items-center flex-wrap gap-3">
           <div className="flex items-center space-x-2 cursor-pointer" onClick={() => setView('LIST')}>
             <svg className="w-8 h-8 text-zenPrimary" fill="currentColor" viewBox="0 0 20 20">
               <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 11H9v-2h2v2zm0-4H9V5h2v4z"></path>
@@ -58,7 +58,7 @@ function App() {
             <h1 className="text-2xl font-black text-zenPrimary tracking-tight">TokTick<span className="text-zenSecondary">IT</span></h1>
           </div>
           
-          <div className="flex space-x-4 items-center">
+          <div className="flex items-center flex-wrap gap-2 sm:gap-4">
             {user && (
               <button 
                 onClick={() => setView('DASHBOARD')}

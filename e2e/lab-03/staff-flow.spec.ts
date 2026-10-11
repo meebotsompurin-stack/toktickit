@@ -36,10 +36,10 @@ test.describe('STAFF-07 to STAFF-08: IT Staff Flow', () => {
     await viewBtn.click();
 
     // Claim Ticket
-    const claimBtn = page.locator('button:has-text("Claim")');
+    const claimBtn = page.locator('button:has-text("Claim Ticket"), button:has-text("Claim")').first();
     if (await claimBtn.isVisible()) {
       await claimBtn.click();
-      await expect(page.locator('text=Frank IT')).toBeVisible();
+      await expect(page.locator('text=Piyanuch Kham-pee').or(page.locator('text=Piyanuch'))).toBeVisible();
     }
 
     // Update Status

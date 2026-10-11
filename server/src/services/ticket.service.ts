@@ -9,37 +9,57 @@ export const createTicket = async (data: {
   description: string;
   requesterId: string;
 }) => {
-  // Generate Ticket Number (เช่น TKT-0001)
-  // สำหรับ Lab นี้ ใช้วิธีดึงตั๋วล่าสุดมาดูแล้วบวกเลขเพิ่มง่ายๆ ก่อน
-  const latestTicket = await prisma.ticket.findFirst({
-    orderBy: { ticketNumber: 'desc' },
-  });
-  
-  let nextNumber = 1;
-  if (latestTicket && latestTicket.ticketNumber.startsWith('TKT-')) {
-    const latestNum = parseInt(latestTicket.ticketNumber.replace('TKT-', ''), 10);
-    if (!isNaN(latestNum)) {
-      nextNumber = latestNum + 1;
+  const maxRetries = 5;
+
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await prisma.$transaction(async (tx) => {
+        // Query tickets to find current max numeric sequence
+        const tickets = await tx.ticket.findMany({
+          where: { ticketNumber: { startsWith: 'TKT-' } },
+          select: { ticketNumber: true },
+        });
+
+        let maxNumber = 0;
+        for (const t of tickets) {
+          const match = t.ticketNumber.match(/^TKT-(\d+)$/);
+          if (match && match[1]) {
+            const num = parseInt(match[1], 10);
+            if (!isNaN(num) && num > maxNumber) {
+              maxNumber = num;
+            }
+          }
+        }
+
+        const nextNumber = maxNumber + 1;
+        const ticketNumber = `TKT-${String(nextNumber).padStart(4, '0')}`;
+
+        return await tx.ticket.create({
+          data: {
+            ticketNumber,
+            categoryId: data.categoryId,
+            relatedSystemId: data.relatedSystemId,
+            requestedPriority: data.requestedPriority.toUpperCase() as any,
+            summary: data.summary,
+            description: data.description,
+            requesterId: data.requesterId,
+            status: 'NEW',
+          },
+        });
+      }, {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      });
+    } catch (err: any) {
+      if (
+        attempt < maxRetries - 1 &&
+        (err.code === 'P2002' || err.code === 'P2034' || err.message?.includes('could not serialize') || err.message?.includes('deadlock'))
+      ) {
+        await new Promise((resolve) => setTimeout(resolve, 50 * (attempt + 1)));
+        continue;
+      }
+      throw err;
     }
   }
-  
-  const ticketNumber = `TKT-${String(nextNumber).padStart(4, '0')}`;
-  
-  // บันทึกลง Database
-  const newTicket = await prisma.ticket.create({
-    data: {
-      ticketNumber,
-      categoryId: data.categoryId,
-      relatedSystemId: data.relatedSystemId,
-      requestedPriority: data.requestedPriority.toUpperCase() as any,
-      summary: data.summary,
-      description: data.description,
-      requesterId: data.requesterId,
-      status: 'NEW', // ตั้งค่าเริ่มต้นเป็น New
-    },
-  });
-  
-  return newTicket;
 };
 
 export const getTickets = async (
