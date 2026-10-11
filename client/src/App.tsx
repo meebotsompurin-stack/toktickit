@@ -3,6 +3,8 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { MyTickets } from './components/MyTickets';
 import { CreateTicket } from './components/CreateTicket';
 import { TicketDetail } from './components/TicketDetail';
+import { StaffDashboard } from './components/StaffDashboard';
+import { RequesterDashboard } from './components/RequesterDashboard';
 import { useAuth } from './contexts/AuthContext';
 import { UserManagementPage } from './pages/UserManagementPage';
 import { StaffQueuePage } from './pages/StaffQueuePage';
@@ -13,8 +15,9 @@ function App() {
   const [healthLoading, setHealthLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   
-  const [view, setView] = useState<'LIST' | 'CREATE' | 'DETAIL' | 'USER_MANAGEMENT' | 'STAFF_QUEUE'>('LIST');
+  const [view, setView] = useState<'LIST' | 'DASHBOARD' | 'CREATE' | 'DETAIL' | 'USER_MANAGEMENT' | 'STAFF_QUEUE'>('LIST');
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+  const [queueFilters, setQueueFilters] = useState<any>(null);
 
   const handleCheckSystem = async () => {
     setHealthLoading(true);
@@ -56,10 +59,29 @@ function App() {
           </div>
           
           <div className="flex space-x-4 items-center">
+            {user && (
+              <button 
+                onClick={() => setView('DASHBOARD')}
+                className={`text-sm font-semibold transition-colors ${view === 'DASHBOARD' ? 'text-zenSecondary border-b-2 border-zenSecondary' : 'text-zenPrimary hover:text-zenSecondary'}`}
+              >
+                Dashboard
+              </button>
+            )}
+            {user && (
+              <button 
+                onClick={() => setView('LIST')}
+                className={`text-sm font-semibold transition-colors ${view === 'LIST' ? 'text-zenSecondary border-b-2 border-zenSecondary' : 'text-zenPrimary hover:text-zenSecondary'}`}
+              >
+                My Tickets
+              </button>
+            )}
             {user && (user.role === 'IT_STAFF' || user.role === 'ADMINISTRATOR') && (
               <button 
-                onClick={() => setView('STAFF_QUEUE')}
-                className="text-sm font-semibold text-zenPrimary hover:text-zenSecondary transition-colors"
+                onClick={() => {
+                  setQueueFilters(null);
+                  setView('STAFF_QUEUE');
+                }}
+                className={`text-sm font-semibold transition-colors ${view === 'STAFF_QUEUE' ? 'text-zenSecondary border-b-2 border-zenSecondary' : 'text-zenPrimary hover:text-zenSecondary'}`}
               >
                 Staff Queue
               </button>
@@ -67,9 +89,9 @@ function App() {
             {user && user.role === 'ADMINISTRATOR' && (
               <button 
                 onClick={() => setView('USER_MANAGEMENT')}
-                className="text-sm font-semibold text-zenPrimary hover:text-zenSecondary transition-colors"
+                className={`text-sm font-semibold transition-colors ${view === 'USER_MANAGEMENT' ? 'text-zenSecondary border-b-2 border-zenSecondary' : 'text-zenPrimary hover:text-zenSecondary'}`}
               >
-                Admin Dashboard
+                User Management
               </button>
             )}
             <button 
@@ -100,7 +122,7 @@ function App() {
         )}
 
         <div className="mb-6 flex justify-end">
-          {user && view === 'LIST' && (
+          {user && user.role === 'REQUESTER' && (view === 'LIST' || view === 'DASHBOARD') && (
             <button 
               className="px-4 py-2 rounded font-semibold text-white bg-zenPrimary hover:bg-zenSecondary shadow-md transition-colors shrink-0"
               onClick={() => setView('CREATE')}
@@ -111,13 +133,42 @@ function App() {
         </div>
 
         <div>
+          {view === 'DASHBOARD' && (
+            user && (user.role === 'IT_STAFF' || user.role === 'ADMINISTRATOR') ? (
+              <StaffDashboard
+                onNavigate={(v, filter) => {
+                  if (v === 'queue') {
+                    setQueueFilters(filter || null);
+                    setView('STAFF_QUEUE');
+                  } else if (v === 'user-management') {
+                    setView('USER_MANAGEMENT');
+                  } else {
+                    setView('LIST');
+                  }
+                }}
+                onSelectTicket={handleViewTicket}
+              />
+            ) : (
+              <RequesterDashboard
+                onNavigate={(v) => setView(v === 'create' ? 'CREATE' : 'LIST')}
+                onSelectTicket={handleViewTicket}
+                onCreateTicket={() => setView('CREATE')}
+              />
+            )
+          )}
           {view === 'LIST' && <MyTickets onView={handleViewTicket} />}
           {view === 'CREATE' && <CreateTicket onCancel={() => setView('LIST')} onSuccess={handleCreateSuccess} />}
           {view === 'DETAIL' && selectedTicketId && (
             <TicketDetail ticketId={selectedTicketId} onBack={() => setView('LIST')} />
           )}
           {view === 'USER_MANAGEMENT' && <UserManagementPage />}
-          {view === 'STAFF_QUEUE' && <StaffQueuePage onView={handleViewTicket} />}
+          {view === 'STAFF_QUEUE' && (
+            <StaffQueuePage
+              onView={handleViewTicket}
+              initialFilter={queueFilters}
+              initialFilters={queueFilters}
+            />
+          )}
         </div>
 
       </main>

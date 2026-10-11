@@ -239,6 +239,15 @@ export const getStaffTickets = async (params: any = {}) => {
   }
 };
 
+export const getStaffMembers = async (): Promise<{ id: string; name: string; email: string; role: string }[]> => {
+  try {
+    return await apiFetch('/api/staff/members', { method: 'GET' });
+  } catch (error) {
+    console.error('API Error - getStaffMembers:', error);
+    return [];
+  }
+};
+
 export const getTicketNotes = async (ticketId: string) => {
   try {
     return await apiFetch(`/api/tickets/${ticketId}/notes`, { method: 'GET' });
@@ -332,4 +341,72 @@ export const updateAction = async (ticketId: string, actionId: string, data: Upd
     throw error;
   }
 };
+
+export interface RequesterDashboardMetrics {
+  totalOpen: number;
+  waitingForRequester: number;
+  recentlyUpdated: number;
+  recentlyResolved: number;
+}
+
+export interface RequesterRecentTicket {
+  id: string;
+  ticketNumber: string;
+  summary: string;
+  status: string;
+  requestedPriority: string;
+  updatedAt: string;
+  createdAt?: string;
+  category?: { name: string };
+  relatedSystem?: { name: string };
+}
+
+export interface RequesterDashboardResponse {
+  metrics: RequesterDashboardMetrics;
+  recentTickets: RequesterRecentTicket[];
+}
+export const RequesterDashboardResponse = {};
+
+export interface StaffDashboardMetrics {
+  unassigned: number;
+  ownedByMe: number;
+  recentlyUpdated: number;
+  byStatus: Record<string, number>;
+  byItPriority: Record<string, number>;
+}
+
+export interface StaffUrgentTicket {
+  id: string;
+  ticketNumber: string;
+  summary: string;
+  status: string;
+  itPriority?: string | null;
+  ownerName: string;
+  updatedAt: string;
+}
+
+export interface StaffDashboardResponse {
+  metrics: StaffDashboardMetrics;
+  urgentTickets: StaffUrgentTicket[];
+}
+export const StaffDashboardResponse = {};
+
+export const getRequesterDashboard = async (): Promise<RequesterDashboardResponse> => {
+  try {
+    return await apiFetch('/api/tickets/dashboard/requester', { method: 'GET' });
+  } catch (error) {
+    console.error('API Error - getRequesterDashboard:', error);
+    throw error;
+  }
+};
+
+export const getStaffDashboard = async (): Promise<StaffDashboardResponse> => {
+  try {
+    return await apiFetch('/api/staff/dashboard', { method: 'GET' });
+  } catch (error) {
+    console.error('API Error - getStaffDashboard:', error);
+    throw error;
+  }
+};
+
 

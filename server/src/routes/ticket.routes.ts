@@ -9,7 +9,8 @@ import {
   addInternalNoteHandler,
   getInternalNotesHandler,
   toggleAppearsResolvedHandler,
-  getTicketActionsHandler
+  getTicketActionsHandler,
+  getRequesterDashboardHandler
 } from '../controllers/ticket.controller';
 import { uploadHandler, downloadAttachmentHandler } from '../controllers/attachment.controller';
 import { uploadSingle } from '../middlewares/upload.middleware';
@@ -18,6 +19,9 @@ const router = Router();
 
 // Use real JWT session auth
 router.use(authenticate);
+
+// GET /api/tickets/dashboard/requester (Dashboard metrics for Requester)
+router.get('/dashboard/requester', getRequesterDashboardHandler);
 
 // GET /api/tickets
 router.get('/', getTicketsHandler);
