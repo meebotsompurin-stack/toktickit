@@ -6,7 +6,9 @@ import {
   updatePriorityHandler,
   updateStatusHandler,
   createActionTakenHandler,
-  updateActionTakenHandler
+  updateActionTakenHandler,
+  getStaffDashboardHandler,
+  getStaffMembersHandler
 } from '../controllers/staff.controller';
 
 const router = Router();
@@ -14,7 +16,9 @@ const router = Router();
 router.use(authenticate);
 router.use(requireRole(['IT_STAFF', 'ADMINISTRATOR']));
 
+router.get('/dashboard', getStaffDashboardHandler);
 router.get('/tickets', getStaffTicketsHandler);
+router.get('/members', getStaffMembersHandler);
 router.patch('/tickets/:id/owner', updateTicketOwnerHandler);
 router.patch('/tickets/:id/priority', updatePriorityHandler);
 router.patch('/tickets/:id/status', updateStatusHandler);

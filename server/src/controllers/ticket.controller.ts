@@ -323,3 +323,66 @@ export const getTicketActionsHandler = async (req: Request, res: Response, next:
     next(error);
   }
 };
+
+export const getRequesterDashboardHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const requesterId = req.user!.id;
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const [totalOpen, waitingForRequester, recentlyUpdated, recentlyResolved, recentTickets] = await Promise.all([
+      prisma.ticket.count({
+        where: {
+          requesterId,
+          status: { in: ['NEW', 'OPEN', 'IN_PROGRESS', 'WAITING_FOR_REQUESTER', 'REOPENED'] },
+        },
+      }),
+      prisma.ticket.count({
+        where: {
+          requesterId,
+          status: 'WAITING_FOR_REQUESTER',
+        },
+      }),
+      prisma.ticket.count({
+        where: {
+          requesterId,
+          updatedAt: { gte: sevenDaysAgo },
+        },
+      }),
+      prisma.ticket.count({
+        where: {
+          requesterId,
+          status: 'RESOLVED',
+        },
+      }),
+      prisma.ticket.findMany({
+        where: { requesterId },
+        orderBy: { updatedAt: 'desc' },
+        take: 10,
+        select: {
+          id: true,
+          ticketNumber: true,
+          summary: true,
+          status: true,
+          requestedPriority: true,
+          updatedAt: true,
+          createdAt: true,
+          category: { select: { name: true } },
+          relatedSystem: { select: { name: true } },
+        },
+      }),
+    ]);
+
+    res.status(200).json({
+      metrics: {
+        totalOpen,
+        waitingForRequester,
+        recentlyUpdated,
+        recentlyResolved,
+      },
+      recentTickets,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

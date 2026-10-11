@@ -4,11 +4,37 @@ import { isValidTransition } from '../lib/status-transitions';
 
 export const getStaffTicketsHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const { status, itPriority, search, page = '1', limit = '10' } = req.query;
+    const {
+      status,
+      itPriority,
+      priority,
+      search,
+      ownerId,
+      owner,
+      unassigned,
+      recentlyUpdated,
+      page = '1',
+      limit = '10'
+    } = req.query;
     
     const where: any = {};
-    if (status) where.status = status;
-    if (itPriority) where.itPriority = itPriority;
+    if (status) where.status = status as string;
+    const prio = (itPriority || priority) as string;
+    if (prio) where.itPriority = prio;
+
+    if (unassigned === 'true' || unassigned === '1' || ownerId === 'unassigned' || owner === 'unassigned') {
+      where.ownerId = null;
+    } else if (ownerId) {
+      where.ownerId = ownerId as string;
+    } else if (owner) {
+      where.ownerId = owner as string;
+    }
+
+    if (recentlyUpdated === 'true' || recentlyUpdated === '1') {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      where.updatedAt = { gte: sevenDaysAgo };
+    }
+
     if (search) {
       where.OR = [
         { ticketNumber: { contains: search as string, mode: 'insensitive' } },
@@ -29,7 +55,7 @@ export const getStaffTicketsHandler = async (req: Request, res: Response, next: 
           category: true,
           relatedSystem: true,
           requester: { select: { name: true, email: true } },
-          owner: { select: { name: true, email: true } },
+          owner: { select: { id: true, name: true, email: true } },
         },
         orderBy: { createdAt: 'desc' }
       }),
@@ -398,3 +424,135 @@ export const updateActionTakenHandler = async (req: Request, res: Response, next
     next(error);
   }
 };
+
+export const getStaffMembersHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const staffMembers = await prisma.user.findMany({
+      where: {
+        role: { in: ['IT_STAFF', 'ADMINISTRATOR'] },
+        isActive: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
+      orderBy: { name: 'asc' },
+    });
+    res.status(200).json(staffMembers);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getStaffDashboardHandler = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const staffId = req.user!.id;
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const [unassigned, ownedByMe, recentlyUpdated, statusGroup, priorityGroup, urgentTickets] = await Promise.all([
+      // Unassigned tickets
+      prisma.ticket.count({
+        where: {
+          ownerId: null,
+        },
+      }),
+      // Tickets owned by current staff
+      prisma.ticket.count({
+        where: {
+          ownerId: staffId,
+        },
+      }),
+      // Tickets updated within the last 7 days (all tickets)
+      prisma.ticket.count({
+        where: {
+          updatedAt: { gte: sevenDaysAgo },
+        },
+      }),
+      // Status breakdown
+      prisma.ticket.groupBy({
+        by: ['status'],
+        _count: { id: true },
+      }),
+      // Priority breakdown
+      prisma.ticket.groupBy({
+        by: ['itPriority'],
+        where: { itPriority: { not: null } },
+        _count: { id: true },
+      }),
+      // Urgent tickets awaiting action (Critical/High priority or unassigned open)
+      prisma.ticket.findMany({
+        where: {
+          status: { notIn: ['CLOSED', 'CANCELLED'] },
+          OR: [
+            { itPriority: { in: ['CRITICAL', 'HIGH'] } },
+            { ownerId: null },
+          ],
+        },
+        orderBy: { updatedAt: 'desc' },
+        take: 10,
+        select: {
+          id: true,
+          ticketNumber: true,
+          summary: true,
+          status: true,
+          itPriority: true,
+          owner: { select: { name: true } },
+          updatedAt: true,
+          createdAt: true,
+        },
+      }),
+    ]);
+
+    const byStatus: Record<string, number> = {
+      NEW: 0,
+      OPEN: 0,
+      IN_PROGRESS: 0,
+      WAITING_FOR_REQUESTER: 0,
+      RESOLVED: 0,
+      CLOSED: 0,
+      REOPENED: 0,
+      CANCELLED: 0,
+    };
+    statusGroup.forEach((g) => {
+      byStatus[g.status] = g._count.id;
+    });
+
+    const byItPriority: Record<string, number> = {
+      CRITICAL: 0,
+      HIGH: 0,
+      MEDIUM: 0,
+      LOW: 0,
+    };
+    priorityGroup.forEach((g) => {
+      if (g.itPriority) {
+        byItPriority[g.itPriority] = g._count.id;
+      }
+    });
+
+    const formattedUrgent = urgentTickets.map((t) => ({
+      id: t.id,
+      ticketNumber: t.ticketNumber,
+      summary: t.summary,
+      status: t.status,
+      itPriority: t.itPriority,
+      ownerName: t.owner?.name || 'Unassigned',
+      updatedAt: t.updatedAt,
+    }));
+
+    res.status(200).json({
+      metrics: {
+        unassigned,
+        ownedByMe,
+        recentlyUpdated,
+        byStatus,
+        byItPriority,
+      },
+      urgentTickets: formattedUrgent,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
