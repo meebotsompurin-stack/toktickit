@@ -14,6 +14,7 @@ const artifactDirs = [
   'artifacts/lab-04/screenshots/action-taken-form',
   'artifacts/lab-04/screenshots/ticket-resolution',
   'artifacts/lab-04/screenshots/admin-dashboard',
+  'artifacts/lab-04/screenshots/requester-dashboard',
 ];
 
 test.beforeAll(() => {
@@ -133,6 +134,16 @@ for (const vp of viewports) {
       await captureScreenshot(page, 'ticket-resolution', vp.name, 'conflict-alert');
 
       await page.unroute('**/api/staff/tickets/*/status');
+    });
+
+    test('5. Requester Dashboard', async ({ page }) => {
+      await doLogin(page, 'somchai.req@toktickit.dev', 'password123');
+      const dashNav = page.locator('button:has-text("Dashboard")').first();
+      await dashNav.waitFor({ state: 'visible', timeout: 10000 });
+      await dashNav.click();
+      await expect(page.getByText('Welcome back')).toBeVisible({ timeout: 10000 });
+      await page.waitForTimeout(500);
+      await captureScreenshot(page, 'requester-dashboard', vp.name, 'requester-overview');
     });
   });
 }
