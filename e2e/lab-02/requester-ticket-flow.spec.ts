@@ -5,16 +5,15 @@ test.describe('Lab 2: Requester Ticket Flow (Issue 4)', () => {
   test.use({ baseURL: 'http://localhost:5173' });
 
   test('Full ticket creation, filtering, and attachment management flow', async ({ page }) => {
-    // 1. เข้าหน้าเว็บ เลือก Development Requester
-    await page.goto('/');
-    
-    // รอโหลดหน้า Dev Requester Selector โดยใช้ Role
-    await expect(page.getByRole('heading', { name: 'Select Requester (Dev Mode)' })).toBeVisible();
-    
-    // คลิกปุ่ม Requester ชื่อ "John Doe"
-    await page.getByRole('button', { name: 'John Doe' }).click();
-    
-    // ยืนยันว่าเข้าสู่หน้า My Tickets โดยใช้ getByRole
+    // 1. เข้าหน้าเว็บ และเข้าสู่ระบบด้วยบัญชี Requester (JWT Auth)
+    await page.goto('/login');
+    await expect(page.getByRole('heading', { name: /TokTickIT/i })).toBeVisible();
+
+    await page.locator('input[type="email"]').fill('somchai.req@toktickit.dev');
+    await page.locator('input[type="password"]').fill('password123');
+    await page.getByRole('button', { name: 'Sign In' }).click();
+
+    // ยืนยันว่าเข้าสู่หน้า My Tickets สำเร็จ
     await expect(page.getByRole('heading', { name: 'My Tickets' })).toBeVisible();
 
     // 2. ไปหน้า Create Ticket, กรอกข้อมูล, แนบไฟล์, และกด Submit

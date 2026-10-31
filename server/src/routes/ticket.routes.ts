@@ -8,7 +8,9 @@ import {
   addPublicCommentHandler,
   addInternalNoteHandler,
   getInternalNotesHandler,
-  toggleAppearsResolvedHandler
+  toggleAppearsResolvedHandler,
+  getTicketActionsHandler,
+  getRequesterDashboardHandler
 } from '../controllers/ticket.controller';
 import { uploadHandler, downloadAttachmentHandler } from '../controllers/attachment.controller';
 import { uploadSingle } from '../middlewares/upload.middleware';
@@ -17,6 +19,9 @@ const router = Router();
 
 // Use real JWT session auth
 router.use(authenticate);
+
+// GET /api/tickets/dashboard/requester (Dashboard metrics for Requester)
+router.get('/dashboard/requester', getRequesterDashboardHandler);
 
 // GET /api/tickets
 router.get('/', getTicketsHandler);
@@ -41,5 +46,8 @@ router.get('/:ticketId/notes', getInternalNotesHandler);
 
 // Toggle Appears Resolved
 router.patch('/:ticketId/resolution-flag', toggleAppearsResolvedHandler);
+
+// Actions Taken for Ticket (Requesters + Staff)
+router.get('/:ticketId/actions', getTicketActionsHandler);
 
 export default router;

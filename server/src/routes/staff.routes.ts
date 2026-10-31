@@ -4,7 +4,11 @@ import {
   getStaffTicketsHandler,
   updateTicketOwnerHandler,
   updatePriorityHandler,
-  updateStatusHandler
+  updateStatusHandler,
+  createActionTakenHandler,
+  updateActionTakenHandler,
+  getStaffDashboardHandler,
+  getStaffMembersHandler
 } from '../controllers/staff.controller';
 
 const router = Router();
@@ -12,9 +16,15 @@ const router = Router();
 router.use(authenticate);
 router.use(requireRole(['IT_STAFF', 'ADMINISTRATOR']));
 
+router.get('/dashboard', getStaffDashboardHandler);
 router.get('/tickets', getStaffTicketsHandler);
+router.get('/members', getStaffMembersHandler);
 router.patch('/tickets/:id/owner', updateTicketOwnerHandler);
 router.patch('/tickets/:id/priority', updatePriorityHandler);
 router.patch('/tickets/:id/status', updateStatusHandler);
+
+// Actions Taken routes
+router.post('/tickets/:ticketId/actions', createActionTakenHandler);
+router.patch('/tickets/:ticketId/actions/:actionId', updateActionTakenHandler);
 
 export default router;

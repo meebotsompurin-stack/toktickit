@@ -1,9 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { PrismaClient, User, Role } from '@prisma/client';
+import { User, Role } from '@prisma/client';
+import { prisma } from '../lib/db';
+import dotenv from 'dotenv';
+dotenv.config();
 
-const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key-for-local-dev';
+const getJwtSecret = (): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is not defined');
+  }
+  return secret;
+};
 
 declare global {
   namespace Express {
@@ -17,25 +25,25 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
   try {
     const authHeader = req.header('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      res.status(401).json({ error: 'Unauthorized', message: 'Missing or invalid Authorization header' });
+      res.status(401).json({ error: 'Unauthorized', message: 'Missing or invalid Authorization header', statusCode: 401, details: [] });
       return;
     }
 
     const token = authHeader.replace('Bearer ', '');
     
     // Verify token
-    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; role: Role };
+    const decoded = jwt.verify(token, getJwtSecret()) as { userId: string; role: Role };
 
     // Fetch user from database
     const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
 
     if (!user) {
-      res.status(401).json({ error: 'Unauthorized', message: 'User not found' });
+      res.status(401).json({ error: 'Unauthorized', message: 'User not found', statusCode: 401, details: [] });
       return;
     }
 
     if (!user.isActive) {
-      res.status(403).json({ error: 'Forbidden', message: 'User account is deactivated' });
+      res.status(403).json({ error: 'Forbidden', message: 'User account is deactivated', statusCode: 403, details: [] });
       return;
     }
 
@@ -45,7 +53,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       !req.originalUrl.includes('/logout') && 
       !req.originalUrl.includes('/me')
     ) {
-      res.status(403).json({ error: 'Forbidden', message: 'Password change required' });
+      res.status(403).json({ error: 'Forbidden', message: 'Password change required', statusCode: 403, details: [] });
       return;
     }
 
@@ -53,19 +61,19 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     req.user = user;
     next();
   } catch (error) {
-    res.status(401).json({ error: 'Unauthorized', message: 'Invalid or expired token' });
+    res.status(401).json({ error: 'Unauthorized', message: 'Invalid or expired token', statusCode: 401, details: [] });
   }
 };
 
 export const requireRole = (roles: Role[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user) {
-      res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated' });
+      res.status(401).json({ error: 'Unauthorized', message: 'User not authenticated', statusCode: 401, details: [] });
       return;
     }
 
     if (!roles.includes(req.user.role)) {
-      res.status(403).json({ error: 'Forbidden', message: 'Insufficient permissions' });
+      res.status(403).json({ error: 'Forbidden', message: 'Insufficient permissions', statusCode: 403, details: [] });
       return;
     }
 

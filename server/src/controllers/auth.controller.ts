@@ -1,10 +1,18 @@
 import { Request, Response } from 'express';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../lib/db';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+dotenv.config();
 
-const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key-for-local-dev';
+const getJwtSecret = (): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is not defined');
+  }
+  return secret;
+};
+
 const SALT_ROUNDS = 12;
 
 export const login = async (req: Request, res: Response): Promise<void> => {
@@ -34,7 +42,7 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     // Generate JWT
     const token = jwt.sign(
       { userId: user.id, role: user.role },
-      JWT_SECRET,
+      getJwtSecret(),
       { expiresIn: '24h' }
     );
 

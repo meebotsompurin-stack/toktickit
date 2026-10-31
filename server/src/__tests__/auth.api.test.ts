@@ -139,7 +139,7 @@ describe('Auth API Tests', () => {
       const token = jwt.sign({ userId: 'user-123', role: 'REQUESTER' }, process.env.JWT_SECRET || 'fallback-secret-key-for-local-dev');
       
       mockUserDb.findUnique.mockResolvedValue({ ...validUser, requiresPasswordChange: true });
-      vi.mocked(bcrypt.compare).mockImplementation(async (plain: string, hash: string) => {
+      vi.mocked(bcrypt.compare).mockImplementation(async (plain: any, hash: string) => {
         return plain === 'oldpassword'; // Returns true for currentPassword, false for newPassword
       });
       vi.mocked(bcrypt.hash).mockResolvedValue('newHashedPassword' as never);

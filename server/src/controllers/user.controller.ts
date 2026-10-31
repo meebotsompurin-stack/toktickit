@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { PrismaClient, Role } from '@prisma/client';
+import { Role } from '@prisma/client';
+import { prisma } from '../lib/db';
 import bcrypt from 'bcrypt';
-
-const prisma = new PrismaClient();
+import crypto from 'crypto';
 const SALT_ROUNDS = 12;
 
 export const getAllUsers = async (req: Request, res: Response): Promise<void> => {
@@ -127,8 +127,11 @@ export const resetUserPassword = async (req: Request, res: Response): Promise<vo
       return;
     }
 
-    const defaultPassword = 'password123';
-    const passwordHash = await bcrypt.hash(defaultPassword, SALT_ROUNDS);
+    const temporaryPassword =
+      req.body?.newPassword ||
+      req.body?.temporaryPassword ||
+      `Tok!${crypto.randomBytes(6).toString('hex')}`;
+    const passwordHash = await bcrypt.hash(temporaryPassword, SALT_ROUNDS);
 
     await prisma.user.update({
       where: { id },
@@ -138,7 +141,11 @@ export const resetUserPassword = async (req: Request, res: Response): Promise<vo
       },
     });
 
-    res.status(200).json({ message: 'Password reset successfully' });
+    res.status(200).json({
+      message: 'Password reset successfully',
+      temporaryPassword,
+      requiresPasswordChange: true,
+    });
   } catch (error) {
     console.error('Error resetting password:', error);
     res.status(500).json({ error: 'Internal Server Error', message: 'Failed to reset password' });

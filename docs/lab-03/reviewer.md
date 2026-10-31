@@ -1,6 +1,8 @@
 # Sprint Peer Review Summary - Lab 3
 
-This document summarizes the GitHub Pull Request peer review process between `meebotsompurin-stack` (Author) and `poom2548` (Reviewer), and vice versa, during the Lab 3 sprint. 
+This document summarizes the GitHub Pull Request peer review process between 
+**Developer / Author:** Purin Mebotsom 67070507214
+**Reviewer:** Saksorn Buranatananun 67070507208
 
 ---
 

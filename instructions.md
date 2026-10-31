@@ -14,7 +14,6 @@
 4. **API Compliance:** You MUST strictly follow the exact endpoints, request parameters, and response schemas defined in `docs/lab-02/api-spec.md`.
 5. **Business Rules:** You MUST strictly enforce all rules defined in `docs/lab-02/specification.md` (e.g., Soft-removal, MIME type checking, Required headers).
 
-## Security & Validation Rules
-- All protected endpoints must validate the `X-Requester-Id` header.
+- All protected endpoints must validate the `Authorization: Bearer <token>` header. Legacy `X-Requester-Id` is strictly deprecated and prohibited.
 - File uploads MUST be validated using real MIME type checking (e.g., `file-type` library), NOT just file extensions.
 - Soft-deleted attachments must be completely hidden from normal GET requests.

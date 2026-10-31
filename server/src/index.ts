@@ -2,9 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import express from 'express';
-import { PrismaClient } from '@prisma/client';
 import cors from 'cors';
-import path from 'path';
 
 import ticketRoutes from './routes/ticket.routes';
 import attachmentRoutes from './routes/attachment.routes';
@@ -18,7 +16,6 @@ import { errorMiddleware } from './middlewares/error.middleware';
 
 const app = express();
 const port = process.env.PORT || 3000;
-const prisma = new PrismaClient();
 
 // Middlewares
 app.use(cors());
